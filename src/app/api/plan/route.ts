@@ -1,0 +1,211 @@
+import { NextResponse } from 'next/server';
+import { LocalDB, DailyPlanEntity } from '../../../lib/db';
+import { generateDailyPlan, generateNextEndlessBatch } from '../../../lib/algorithms/planEngine';
+import { calculateNextReview, formatDate, checkMasteryStatus } from '../../../lib/algorithms/srsScheduler';
+import { DIFFICULTY_CONFIGS } from '../../../config/gamification';
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const mode = searchParams.get('mode'); // 'practice' 为无尽加练模式
+  const today = formatDate(new Date());
+
+  const settings = LocalDB.getSettings();
+  const allWords = LocalDB.getAllWords();
+  const allRecords = LocalDB.getAllRecords();
+  const recordsMap = new Map(allRecords.map((r) => [r.wordId, r]));
+
+  // 统计当前在学（未掌握）负荷量 N
+  const activeLearningCount = allRecords.filter(
+    (r) => !checkMasteryStatus(r.reviewInterval, r.lastResult)
+  ).length;
+
+  // 1. 无尽加练模式请求
+  if (mode === 'practice') {
+    const batchIdx = parseInt(searchParams.get('batchIndex') || '0', 10);
+    // 所有参加过测试的旧词（包含到期和未到期，乱序抽取巩固）
+    const allReviewWords = allWords.filter((w) => recordsMap.has(w.id));
+    // 尚未学习的新词
+    const unlearnedWords = allWords.filter((w) => !recordsMap.has(w.id));
+
+    const endlessBatch = generateNextEndlessBatch(
+      allReviewWords.length > 0 ? allReviewWords : allWords,
+      unlearnedWords,
+      activeLearningCount,
+      batchIdx,
+      today
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        batch: endlessBatch,
+        activeLearningCount,
+      },
+    });
+  }
+
+  // 2. 常规今日计划请求
+  let plan = LocalDB.getDailyPlan(today);
+  if (plan) {
+    return NextResponse.json({
+      success: true,
+      data: plan,
+      activeLearningCount,
+    });
+  }
+
+  // 首次生成今日计划
+  const dueReviewWords = allWords.filter((w) => {
+    const rec = recordsMap.get(w.id);
+    return rec && rec.nextReviewDate <= today;
+  });
+  const unlearnedWords = allWords.filter((w) => !recordsMap.has(w.id));
+
+  const generated = generateDailyPlan(
+    dueReviewWords,
+    unlearnedWords,
+    activeLearningCount,
+    settings.difficulty,
+    today
+  );
+
+  const newPlan: DailyPlanEntity = {
+    id: `plan-${today}`,
+    date: today,
+    difficulty: settings.difficulty,
+    targetNewWordCount: generated.targetNewWordCount,
+    totalWordCount: generated.totalWordCount,
+    isCompleted: false,
+    bonusAwarded: false,
+    currentBatchIndex: 0,
+    currentTaskIndex: 0,
+    batches: generated.batches,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  LocalDB.saveDailyPlan(newPlan);
+  return NextResponse.json({
+    success: true,
+    data: newPlan,
+    activeLearningCount,
+  });
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { action, date, batchIndex, taskIndex, taskId, wordId, isCorrect, familiarity } = body;
+    const planDate = date || formatDate(new Date());
+
+    const plan = LocalDB.getDailyPlan(planDate);
+    const settings = LocalDB.getSettings();
+
+    if (action === 'update_progress' && plan) {
+      plan.currentBatchIndex = batchIndex ?? plan.currentBatchIndex;
+      plan.currentTaskIndex = taskIndex ?? plan.currentTaskIndex;
+      LocalDB.saveDailyPlan(plan);
+      return NextResponse.json({ success: true, data: plan });
+    }
+
+    if (action === 'card_familiarity') {
+      const existingRec = LocalDB.getRecordByWordId(wordId);
+      LocalDB.upsertRecord({
+        wordId,
+        familiarity: familiarity ?? 0,
+        reviewInterval: existingRec?.reviewInterval ?? 1,
+        nextReviewDate: existingRec?.nextReviewDate ?? planDate,
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'submit_task') {
+      let isFirstTry = true;
+      let pointsAwarded = 0;
+
+      // 如果在常规计划中能找到该 task
+      if (plan) {
+        for (const batch of plan.batches) {
+          const found = batch.testTasks.find((t) => t.taskId === taskId);
+          if (found) {
+            isFirstTry = !found.isAnswered;
+            found.isAnswered = true;
+            found.isFirstTryCorrect = isCorrect;
+            if (isFirstTry && isCorrect && !found.scoreAwarded) {
+              found.scoreAwarded = true;
+              pointsAwarded = 1;
+              LocalDB.updateSettings({ totalPoints: settings.totalPoints + 1 });
+            }
+            break;
+          }
+        }
+        LocalDB.saveDailyPlan(plan);
+      }
+
+      // 如果是无尽加练模式（taskId 格式为 endless-），只要首次答对同样奖励 +1 分！
+      if (taskId.startsWith('endless-') && isCorrect) {
+        pointsAwarded = 1;
+        LocalDB.updateSettings({ totalPoints: settings.totalPoints + 1 });
+      }
+
+      // 更新艾宾浩斯复习记录
+      const existingRec = LocalDB.getRecordByWordId(wordId);
+      const srs = calculateNextReview(existingRec?.reviewInterval ?? 0, isCorrect, new Date());
+
+      LocalDB.upsertRecord({
+        wordId,
+        reviewInterval: srs.nextInterval,
+        nextReviewDate: srs.nextReviewDate,
+        totalAttempts: 1,
+        correctCount: isCorrect ? 1 : 0,
+        lastResult: isCorrect,
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: { pointsAwarded, isFirstTry, srs },
+      });
+    }
+
+    if (action === 'complete_plan' && plan) {
+      let bonusAwarded = 0;
+      if (!plan.bonusAwarded) {
+        const diffConfig = DIFFICULTY_CONFIGS[plan.difficulty] || DIFFICULTY_CONFIGS.regular;
+        bonusAwarded = diffConfig.dailyBonusPoints;
+
+        const yesterday = formatDate(new Date(Date.now() - 86400000));
+        let newStreak = settings.streakDays;
+        if (settings.lastCompletedDate === yesterday) {
+          newStreak += 1;
+        } else if (settings.lastCompletedDate !== planDate) {
+          newStreak = 1;
+        }
+
+        LocalDB.updateSettings({
+          totalPoints: settings.totalPoints + bonusAwarded,
+          streakDays: newStreak,
+          lastCompletedDate: planDate,
+        });
+
+        plan.bonusAwarded = true;
+      }
+
+      plan.isCompleted = true;
+      LocalDB.saveDailyPlan(plan);
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          plan,
+          bonusAwarded,
+          newStreak: LocalDB.getSettings().streakDays,
+          totalPoints: LocalDB.getSettings().totalPoints,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
