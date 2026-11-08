@@ -76,6 +76,35 @@ function StudyInner() {
     };
   }, []);
 
+  // 实时累加学习时长 (每 30 秒向服务器心跳一次，仅在页面可见活跃时记录)
+  useEffect(() => {
+    const sendHeartbeat = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetch('/api/study/time', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seconds: 30 }),
+        }).catch(() => {});
+      }
+    };
+
+    const interval = setInterval(sendHeartbeat, 30000);
+    const initialTimer = setTimeout(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetch('/api/study/time', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seconds: 15 }),
+        }).catch(() => {});
+      }
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimer);
+    };
+  }, []);
+
   // 加载数据与初始化
   useEffect(() => {
     fetchSession();

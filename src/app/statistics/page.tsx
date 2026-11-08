@@ -3,7 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { COPYWRITING } from '../../config/copywriting';
-import { Flame, Award, CheckCircle, BookOpen, Clock, Target, TrendingUp } from 'lucide-react';
+import {
+  Flame,
+  Award,
+  CheckCircle,
+  BookOpen,
+  Clock,
+  Target,
+  TrendingUp,
+  Timer,
+  Calendar,
+} from 'lucide-react';
 
 export default function StatisticsPage() {
   const [stats, setStats] = useState<any>(null);
@@ -34,24 +44,38 @@ export default function StatisticsPage() {
     );
   }
 
-  // 模拟近 7 天学习数据分布（展示平滑趋势）
-  const days = ['周一', '周二', '周三', '周四', '周五', '周六', '今天'];
-  const trendData = [12, 15, 10, 18, 14, 20, stats?.learnedCount || 15];
-  const maxVal = Math.max(...trendData, 25);
+  // 近 7 天学习时间数据
+  const recent7Days = stats?.recent7DaysTime || [];
+  const maxMinutes = Math.max(...recent7Days.map((d: any) => d.minutes), 30);
+  const total7DaysMinutes = recent7Days.reduce((acc: number, cur: any) => acc + (cur.minutes || 0), 0);
+  const avgDailyMinutes = Math.round((total7DaysMinutes / 7) * 10) / 10;
 
   return (
-    <div className="flex-1 max-w-5xl w-full mx-auto p-6 sm:p-10 flex flex-col">
-      <div className="mb-8">
+    <div className="flex-1 max-w-5xl w-full mx-auto p-6 sm:p-10 flex flex-col gap-8">
+      <div>
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">
           {COPYWRITING.statistics.title}
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          真实记录每一天点滴积累，见证从量变到质变的飞跃
+          真实记录每一天的学习时长与词汇成长，见证从量变到质变的飞跃
         </p>
       </div>
 
       {/* 6 大核心数据指标卡片 */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* 今日学习时长 (突出高亮) */}
+        <Card className="p-5 flex items-center gap-4 border-indigo-200 bg-gradient-to-tr from-indigo-50/70 to-purple-50/50 shadow-sm">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-200">
+            <Timer size={24} />
+          </div>
+          <div>
+            <p className="text-xs text-indigo-700 font-bold">今日专注学习时长</p>
+            <h3 className="text-2xl font-black text-slate-900">
+              {stats?.todayStudyMinutes || 0} <span className="text-sm font-bold text-indigo-600">分钟</span>
+            </h3>
+          </div>
+        </Card>
+
         <Card className="p-5 flex items-center gap-4 border-slate-100">
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
             <BookOpen size={24} />
@@ -101,47 +125,56 @@ export default function StatisticsPage() {
             <h3 className="text-2xl font-black text-slate-900">{stats?.totalPoints || 0} 分</h3>
           </div>
         </Card>
-
-        <Card className="p-5 flex items-center gap-4 border-slate-100">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-            <Clock size={24} />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-semibold">{COPYWRITING.statistics.totalAttempts}</p>
-            <h3 className="text-2xl font-black text-slate-900">{stats?.totalAttempts || 0} 次</h3>
-          </div>
-        </Card>
       </div>
 
-      {/* 近 7 天学习趋势柱状图 */}
-      <Card className="p-6 sm:p-8 border-slate-100">
-        <div className="flex items-center justify-between mb-6">
+      {/* 近 7 天每日学习时间柱状统计图 */}
+      <Card className="p-6 sm:p-8 border-slate-100 flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <TrendingUp size={20} className="text-indigo-600" />
-            <h2 className="text-lg font-bold text-slate-900">{COPYWRITING.statistics.chartTitle}</h2>
+            <Clock size={20} className="text-indigo-600" />
+            <h2 className="text-lg font-bold text-slate-900">近 7 天每日专注学习时间 (分钟)</h2>
           </div>
-          <span className="text-xs text-slate-400 font-medium">每天学习词量趋势</span>
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
+            <span>
+              近7天累计: <strong className="text-indigo-600 font-bold">{total7DaysMinutes}</strong> 分钟
+            </span>
+            <span>
+              日均: <strong className="text-emerald-600 font-bold">{avgDailyMinutes}</strong> 分钟
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-end justify-between gap-3 h-48 pt-6 px-2">
-          {days.map((day, idx) => {
-            const val = trendData[idx];
-            const heightPercent = Math.round((val / maxVal) * 100);
+        {/* 柱状图 */}
+        <div className="flex items-end justify-between gap-3 h-56 pt-8 px-2 sm:px-6">
+          {recent7Days.map((item: any, idx: number) => {
+            const heightPercent = Math.max(8, Math.round((item.minutes / maxMinutes) * 100));
+            const isToday = idx === recent7Days.length - 1;
 
             return (
-              <div key={day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                <span className="text-xs font-bold text-slate-600">{val}</span>
-                <div className="w-full max-w-[42px] bg-slate-100 rounded-t-xl overflow-hidden flex flex-col justify-end h-32">
+              <div key={item.date} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                <span className="text-xs font-bold text-slate-700 transition-transform group-hover:scale-110">
+                  {item.minutes > 0 ? `${item.minutes}m` : '0'}
+                </span>
+
+                <div className="w-full max-w-[44px] bg-slate-100 rounded-2xl overflow-hidden flex flex-col justify-end h-36 p-1">
                   <div
-                    className={`w-full rounded-t-xl transition-all duration-500 ${
-                      idx === 6
-                        ? 'bg-gradient-to-t from-indigo-600 to-purple-600'
-                        : 'bg-indigo-300 hover:bg-indigo-400'
+                    className={`w-full rounded-xl transition-all duration-500 shadow-sm ${
+                      isToday
+                        ? 'bg-gradient-to-t from-indigo-600 via-indigo-500 to-purple-500'
+                        : item.minutes > 0
+                        ? 'bg-gradient-to-t from-indigo-400 to-indigo-300 group-hover:from-indigo-500 group-hover:to-indigo-400'
+                        : 'bg-slate-200'
                     }`}
                     style={{ height: `${heightPercent}%` }}
                   />
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 mt-1">{day}</span>
+
+                <div className="flex flex-col items-center mt-1">
+                  <span className={`text-xs font-bold ${isToday ? 'text-indigo-600' : 'text-slate-600'}`}>
+                    {item.weekday}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">{item.label}</span>
+                </div>
               </div>
             );
           })}

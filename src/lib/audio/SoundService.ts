@@ -1,6 +1,7 @@
 /**
  * 音频服务与发音适配器 (Sound Service)
- * 异步预加载语音列表，深度锁定微软神经网络 Ryan 音色与高质量自然英音，彻底替换 Windows 默认机械音
+ * 1. 优先采用真人外教录音原声流 (纯正英音/美音外教母语发音，彻底解决 iPad 上合成音机械、发瘪、含糊不清的问题)
+ * 2. 句子填空与离线场景自动降级至高质量系统神经网络 TTS
  */
 
 export class SoundService {
@@ -8,6 +9,8 @@ export class SoundService {
   private static isAudioUnlocked = false;
   private static cachedVoices: SpeechSynthesisVoice[] = [];
   private static currentVoiceName: string = '';
+  private static accent: 'uk' | 'us' = 'uk'; // 默认纯正英音 (Cambridge)
+  private static currentAudio: HTMLAudioElement | null = null;
 
   /**
    * 解锁 iPad / iOS Safari 上的 Web Audio 和 SpeechSynthesis 限制
@@ -30,7 +33,6 @@ export class SoundService {
         const dummy = new SpeechSynthesisUtterance('');
         dummy.volume = 0;
         window.speechSynthesis.speak(dummy);
-        // 预拉取语音
         this.getVoicesAsync();
       }
 
@@ -40,8 +42,16 @@ export class SoundService {
     }
   }
 
+  public static setAccent(accent: 'uk' | 'us'): void {
+    this.accent = accent;
+  }
+
+  public static getAccent(): 'uk' | 'us' {
+    return this.accent;
+  }
+
   /**
-   * 异步可靠获取浏览器可用语音列表（解决异步加载延迟返回空数组的问题）
+   * 异步可靠获取浏览器可用语音列表（用于例句与离线保底）
    */
   public static async getVoicesAsync(): Promise<SpeechSynthesisVoice[]> {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -68,16 +78,13 @@ export class SoundService {
         resolve(this.cachedVoices);
       };
 
-      // 监听浏览器异步加载事件
       window.speechSynthesis.onvoiceschanged = finish;
-
-      // 300ms 安全后备超时
       setTimeout(finish, 350);
     });
   }
 
   /**
-   * 智能挑选最高音质的声音（优先 Ryan，其次神经网络/自然男声，严禁落入冷硬机械音）
+   * 智能挑选最高音质的合成音（备用保底）
    */
   public static async selectBestVoice(): Promise<SpeechSynthesisVoice | null> {
     const voices = await this.getVoicesAsync();
@@ -94,7 +101,7 @@ export class SoundService {
       return ryanVoice;
     }
 
-    // 2. 微软 Edge / 现代浏览器 Online Natural 神经网络英音 (Sonia, Guy, Jenny, Libby 等)
+    // 2. 微软 Edge / 现代浏览器 Online Natural 神经网络英音
     const edgeNaturalVoice = voices.find(
       (v) =>
         v.lang.startsWith('en') &&
@@ -105,7 +112,7 @@ export class SoundService {
       return edgeNaturalVoice;
     }
 
-    // 3. 苹果 iOS / iPad 原生高级自然音 (Oliver, Daniel, Arthur, Samantha)
+    // 3. 苹果 iOS / iPad 原生高级自然音
     const appleNaturalVoice = voices.find(
       (v) =>
         v.lang.startsWith('en') &&
@@ -129,14 +136,13 @@ export class SoundService {
       return googleVoice;
     }
 
-    // 5. Windows 本地 SAPI 兜底：优先使用 Zira（女声平滑，远优于极其机械生硬的 David）
+    // 5. 本地 SAPI 兜底 (Zira 女声平滑)
     const ziraVoice = voices.find((v) => v.name.includes('Zira'));
     if (ziraVoice) {
       this.currentVoiceName = ziraVoice.name;
       return ziraVoice;
     }
 
-    // 6. 最终英文保底
     const anyEn = voices.find((v) => v.lang.startsWith('en')) || voices[0] || null;
     if (anyEn) {
       this.currentVoiceName = anyEn.name;
@@ -144,100 +150,169 @@ export class SoundService {
     return anyEn;
   }
 
-  /**
-   * 获取当前生效的音色名称
-   */
   public static getCurrentVoiceName(): string {
-    return this.currentVoiceName || '正在匹配神经网络音色...';
+    return this.currentVoiceName || '母语外教高清原声 (剑桥/牛津标准音)';
   }
 
   /**
-   * 朗读英文单词、短语或句子（保证使用异步挑选的高品质音色）
+   * 播放真人录音棚原声流
+   */
+  private static playNativeAudio(word: string, rate: number = 1.0): Promise<boolean> {
+    return new Promise((resolve) => {
+      try {
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio = null;
+        }
+
+        const typeParam = this.accent === 'uk' ? '1' : '2';
+        const cleanWord = encodeURIComponent(word.trim());
+        const audioUrl = `https://dict.youdao.com/dictvoice?audio=${cleanWord}&type=${typeParam}`;
+
+        const audio = new Audio(audioUrl);
+        this.currentAudio = audio;
+        audio.playbackRate = Math.max(0.7, Math.min(1.3, rate));
+
+        const timeout = setTimeout(() => {
+          resolve(false);
+        }, 3000);
+
+        audio.onended = () => {
+          clearTimeout(timeout);
+          resolve(true);
+        };
+
+        audio.onerror = () => {
+          clearTimeout(timeout);
+          resolve(false);
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            clearTimeout(timeout);
+            resolve(false);
+          });
+        }
+      } catch (err) {
+        resolve(false);
+      }
+    });
+  }
+
+  /**
+   * 朗读英文单词、短语或句子
+   * 单词/短语优先调用母语外教真人录音原声，例句/复杂句或网络异常时自动使用高品质 TTS
    */
   public static async speak(text: string, rate: number = 0.9): Promise<void> {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      return;
+    if (typeof window === 'undefined') return;
+
+    this.unlockAudioContext();
+
+    const cleanText = text.trim();
+    if (!cleanText) return;
+
+    // 判定是否为单词或短语 (通常不包含标点句号、不含超过 4 个单词)
+    const isSingleWordOrShortPhrase =
+      !cleanText.includes('.') &&
+      !cleanText.includes('?') &&
+      !cleanText.includes('!') &&
+      cleanText.split(/\s+/).length <= 4 &&
+      !cleanText.includes('blank');
+
+    if (isSingleWordOrShortPhrase) {
+      const nativeOk = await this.playNativeAudio(cleanText, rate);
+      if (nativeOk) return; // 成功播放真人原声，直接返回！
     }
+
+    // 降级使用 TTS 合成音（处理句子理解题、挖空例句或无网场景）
+    if (!('speechSynthesis' in window)) return;
 
     try {
       window.speechSynthesis.cancel();
 
       const voice = await this.selectBestVoice();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-GB';
-      utterance.rate = rate; // 0.9 自然语速
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = this.accent === 'uk' ? 'en-GB' : 'en-US';
+      utterance.rate = rate;
       utterance.pitch = 1.0;
 
       if (voice) {
         utterance.voice = voice;
-        // console.log('[WordQuest TTS Active Voice]:', voice.name);
       }
 
-      return new Promise((resolve) => {
-        utterance.onend = () => resolve();
-        utterance.onerror = () => resolve();
-        window.speechSynthesis.speak(utterance);
-      });
-    } catch (err) {
-      console.warn('SpeechSynthesis error:', err);
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('SpeechSynthesis speak failed:', e);
     }
   }
 
   /**
-   * Web Audio API 合成音效
+   * 停止当前发音
+   */
+  public static stop(): void {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  /**
+   * 极简高雅反馈音效 (零音频文件依赖，纯 Web Audio 合成)
    */
   public static playSFX(type: 'correct' | 'wrong' | 'complete' | 'easter_egg'): void {
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
+      this.unlockAudioContext();
+      if (!this.audioCtx) return;
 
-      if (!this.audioCtx) {
-        this.audioCtx = new AudioContextClass();
-      }
-      if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
-      }
-
-      const ctx = this.audioCtx;
-      const now = ctx.currentTime;
+      const now = this.audioCtx.currentTime;
 
       if (type === 'correct') {
-        this.createTone(ctx, 523.25, now, 0.12, 'sine', 0.15);
-        this.createTone(ctx, 783.99, now + 0.1, 0.22, 'sine', 0.15);
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.08); // E5
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.16); // G5
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
       } else if (type === 'wrong') {
-        this.createTone(ctx, 329.63, now, 0.15, 'triangle', 0.12);
-        this.createTone(ctx, 261.63, now + 0.12, 0.25, 'triangle', 0.12);
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.2);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
       } else if (type === 'complete' || type === 'easter_egg') {
-        this.createTone(ctx, 523.25, now, 0.15, 'sine', 0.15);
-        this.createTone(ctx, 659.25, now + 0.12, 0.15, 'sine', 0.15);
-        this.createTone(ctx, 783.99, now + 0.24, 0.2, 'sine', 0.15);
-        this.createTone(ctx, 1046.50, now + 0.38, 0.45, 'sine', 0.18);
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          if (!this.audioCtx) return;
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          const t = now + i * 0.09;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.26);
+        });
       }
-    } catch (e) {}
-  }
-
-  private static createTone(
-    ctx: AudioContext,
-    freq: number,
-    startTime: number,
-    duration: number,
-    type: OscillatorType,
-    maxGain: number
-  ) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, startTime);
-
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(maxGain, startTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(startTime);
-    osc.stop(startTime + duration);
+    } catch (e) {
+      // AudioCtx muted / not ready
+    }
   }
 }

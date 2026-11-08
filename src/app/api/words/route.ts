@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import { LocalDB } from '../../../lib/db';
 import { MASTERY_INTERVAL_THRESHOLD } from '../../../config/learningRules';
+import { getStudentIdFromRequest } from '../../../lib/auth/serverAuth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get('filter') || 'all'; // 'all' | 'learning' | 'mastered'
   const query = (searchParams.get('q') || '').trim().toLowerCase();
   const includeUntested = searchParams.get('untested') === 'true';
+  const studentId = getStudentIdFromRequest(req);
 
   const allWords = LocalDB.getAllWords();
-  const recordsMap = new Map(LocalDB.getAllRecords().map((r) => [r.wordId, r]));
+  const recordsMap = new Map(LocalDB.getAllRecords(studentId).map((r) => [r.wordId, r]));
 
   // 严格规则：“我的单词”仅展示真正开始学习并完成测试过的单词
   let words = allWords.filter((w) => {

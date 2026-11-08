@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { LocalDB } from '../../../lib/db';
+import { getStudentIdFromRequest } from '../../../lib/auth/serverAuth';
 
-export async function GET() {
-  const stats = LocalDB.getStatistics();
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
+  const studentId = getStudentIdFromRequest(req);
+  const stats = LocalDB.getStatistics(studentId);
   return NextResponse.json({ success: true, data: stats });
 }

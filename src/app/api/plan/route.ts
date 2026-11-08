@@ -3,15 +3,19 @@ import { LocalDB, DailyPlanEntity } from '../../../lib/db';
 import { generateDailyPlan, generateNextEndlessBatch } from '../../../lib/algorithms/planEngine';
 import { calculateNextReview, formatDate, checkMasteryStatus } from '../../../lib/algorithms/srsScheduler';
 import { DIFFICULTY_CONFIGS } from '../../../config/gamification';
+import { getStudentIdFromRequest } from '../../../lib/auth/serverAuth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const mode = searchParams.get('mode'); // 'practice' 为无尽加练模式
   const today = formatDate(new Date());
+  const studentId = getStudentIdFromRequest(req);
 
-  const settings = LocalDB.getSettings();
+  const settings = LocalDB.getSettings(studentId);
   const allWords = LocalDB.getAllWords();
-  const allRecords = LocalDB.getAllRecords();
+  const allRecords = LocalDB.getAllRecords(studentId);
   const recordsMap = new Map(allRecords.map((r) => [r.wordId, r]));
 
   // 统计当前在学（未掌握）负荷量 N
@@ -22,9 +26,7 @@ export async function GET(req: Request) {
   // 1. 无尽加练模式请求
   if (mode === 'practice') {
     const batchIdx = parseInt(searchParams.get('batchIndex') || '0', 10);
-    // 所有参加过测试的旧词（包含到期和未到期，乱序抽取巩固）
     const allReviewWords = allWords.filter((w) => recordsMap.has(w.id));
-    // 尚未学习的新词
     const unlearnedWords = allWords.filter((w) => !recordsMap.has(w.id));
 
     const endlessBatch = generateNextEndlessBatch(
@@ -45,7 +47,7 @@ export async function GET(req: Request) {
   }
 
   // 2. 常规今日计划请求
-  let plan = LocalDB.getDailyPlan(today);
+  let plan = LocalDB.getDailyPlan(today, studentId);
   if (plan) {
     return NextResponse.json({
       success: true,
@@ -70,7 +72,7 @@ export async function GET(req: Request) {
   );
 
   const newPlan: DailyPlanEntity = {
-    id: `plan-${today}`,
+    id: `plan-${today}-${studentId}`,
     date: today,
     difficulty: settings.difficulty,
     targetNewWordCount: generated.targetNewWordCount,
@@ -84,7 +86,7 @@ export async function GET(req: Request) {
     updatedAt: new Date().toISOString(),
   };
 
-  LocalDB.saveDailyPlan(newPlan);
+  LocalDB.saveDailyPlan(newPlan, studentId);
   return NextResponse.json({
     success: true,
     data: newPlan,
@@ -97,25 +99,29 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { action, date, batchIndex, taskIndex, taskId, wordId, isCorrect, familiarity } = body;
     const planDate = date || formatDate(new Date());
+    const studentId = getStudentIdFromRequest(req) || body.studentId || 'student-default';
 
-    const plan = LocalDB.getDailyPlan(planDate);
-    const settings = LocalDB.getSettings();
+    const plan = LocalDB.getDailyPlan(planDate, studentId);
+    const settings = LocalDB.getSettings(studentId);
 
     if (action === 'update_progress' && plan) {
       plan.currentBatchIndex = batchIndex ?? plan.currentBatchIndex;
       plan.currentTaskIndex = taskIndex ?? plan.currentTaskIndex;
-      LocalDB.saveDailyPlan(plan);
+      LocalDB.saveDailyPlan(plan, studentId);
       return NextResponse.json({ success: true, data: plan });
     }
 
     if (action === 'card_familiarity') {
-      const existingRec = LocalDB.getRecordByWordId(wordId);
-      LocalDB.upsertRecord({
-        wordId,
-        familiarity: familiarity ?? 0,
-        reviewInterval: existingRec?.reviewInterval ?? 1,
-        nextReviewDate: existingRec?.nextReviewDate ?? planDate,
-      });
+      const existingRec = LocalDB.getRecordByWordId(wordId, studentId);
+      LocalDB.upsertRecord(
+        {
+          wordId,
+          familiarity: familiarity ?? 0,
+          reviewInterval: existingRec?.reviewInterval ?? 1,
+          nextReviewDate: existingRec?.nextReviewDate ?? planDate,
+        },
+        studentId
+      );
       return NextResponse.json({ success: true });
     }
 
@@ -123,7 +129,6 @@ export async function POST(req: Request) {
       let isFirstTry = true;
       let pointsAwarded = 0;
 
-      // 如果在常规计划中能找到该 task
       if (plan) {
         for (const batch of plan.batches) {
           const found = batch.testTasks.find((t) => t.taskId === taskId);
@@ -134,32 +139,33 @@ export async function POST(req: Request) {
             if (isFirstTry && isCorrect && !found.scoreAwarded) {
               found.scoreAwarded = true;
               pointsAwarded = 1;
-              LocalDB.updateSettings({ totalPoints: settings.totalPoints + 1 });
+              LocalDB.updateSettings({ totalPoints: settings.totalPoints + 1 }, studentId);
             }
             break;
           }
         }
-        LocalDB.saveDailyPlan(plan);
+        LocalDB.saveDailyPlan(plan, studentId);
       }
 
-      // 如果是无尽加练模式（taskId 格式为 endless-），只要首次答对同样奖励 +1 分！
       if (taskId.startsWith('endless-') && isCorrect) {
         pointsAwarded = 1;
-        LocalDB.updateSettings({ totalPoints: settings.totalPoints + 1 });
+        LocalDB.updateSettings({ totalPoints: settings.totalPoints + 1 }, studentId);
       }
 
-      // 更新艾宾浩斯复习记录
-      const existingRec = LocalDB.getRecordByWordId(wordId);
+      const existingRec = LocalDB.getRecordByWordId(wordId, studentId);
       const srs = calculateNextReview(existingRec?.reviewInterval ?? 0, isCorrect, new Date());
 
-      LocalDB.upsertRecord({
-        wordId,
-        reviewInterval: srs.nextInterval,
-        nextReviewDate: srs.nextReviewDate,
-        totalAttempts: 1,
-        correctCount: isCorrect ? 1 : 0,
-        lastResult: isCorrect,
-      });
+      LocalDB.upsertRecord(
+        {
+          wordId,
+          reviewInterval: srs.nextInterval,
+          nextReviewDate: srs.nextReviewDate,
+          totalAttempts: 1,
+          correctCount: isCorrect ? 1 : 0,
+          lastResult: isCorrect,
+        },
+        studentId
+      );
 
       return NextResponse.json({
         success: true,
@@ -181,25 +187,28 @@ export async function POST(req: Request) {
           newStreak = 1;
         }
 
-        LocalDB.updateSettings({
-          totalPoints: settings.totalPoints + bonusAwarded,
-          streakDays: newStreak,
-          lastCompletedDate: planDate,
-        });
+        LocalDB.updateSettings(
+          {
+            totalPoints: settings.totalPoints + bonusAwarded,
+            streakDays: newStreak,
+            lastCompletedDate: planDate,
+          },
+          studentId
+        );
 
         plan.bonusAwarded = true;
       }
 
       plan.isCompleted = true;
-      LocalDB.saveDailyPlan(plan);
+      LocalDB.saveDailyPlan(plan, studentId);
 
       return NextResponse.json({
         success: true,
         data: {
           plan,
           bonusAwarded,
-          newStreak: LocalDB.getSettings().streakDays,
-          totalPoints: LocalDB.getSettings().totalPoints,
+          newStreak: LocalDB.getSettings(studentId).streakDays,
+          totalPoints: LocalDB.getSettings(studentId).totalPoints,
         },
       });
     }

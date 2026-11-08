@@ -5,6 +5,7 @@
     "difficulty": "master",
     "volume": 1,
     "speechRate": 0.85,
+    "accent": "uk",
     "streakDays": 1,
     "totalPoints": 48,
     "lastCompletedDate": "2026-11-08"
@@ -36027,6 +36028,1340 @@
       ],
       "createdAt": "2026-11-08T12:17:31.550Z",
       "updatedAt": "2026-11-08T13:50:01.781Z"
+    }
+  },
+  "users": {
+    "admin": {
+      "id": "admin",
+      "username": "admin",
+      "realName": "系统管理员",
+      "password": "admin",
+      "role": "admin",
+      "status": "approved",
+      "createdAt": "2026-11-08T15:09:36.423Z",
+      "approvedAt": "2026-11-08T15:09:36.424Z"
+    },
+    "student-default": {
+      "id": "student-default",
+      "username": "student",
+      "realName": "张同学",
+      "password": "123",
+      "role": "student",
+      "status": "approved",
+      "createdAt": "2026-11-08T15:09:36.424Z",
+      "approvedAt": "2026-11-08T15:09:36.424Z"
+    }
+  },
+  "students": {
+    "student-default": {
+      "settings": {
+        "id": "student-default",
+        "studentName": "张同学",
+        "difficulty": "master",
+        "volume": 1,
+        "speechRate": 0.85,
+        "accent": "uk",
+        "streakDays": 1,
+        "totalPoints": 48,
+        "lastCompletedDate": "2026-11-08"
+      },
+      "records": {
+        "seed-1-ability": {
+          "wordId": "seed-1-ability",
+          "familiarity": 1,
+          "reviewInterval": 7,
+          "nextReviewDate": "2026-11-15",
+          "totalAttempts": 2,
+          "correctCount": 2,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:17:40.934Z",
+          "updatedAt": "2026-11-08T13:50:11.671Z"
+        },
+        "seed-2-abroad": {
+          "wordId": "seed-2-abroad",
+          "familiarity": 1,
+          "reviewInterval": 14,
+          "nextReviewDate": "2026-11-22",
+          "totalAttempts": 3,
+          "correctCount": 3,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:17:47.984Z",
+          "updatedAt": "2026-11-08T13:49:36.359Z"
+        },
+        "seed-3-accept": {
+          "wordId": "seed-3-accept",
+          "familiarity": 1,
+          "reviewInterval": 14,
+          "nextReviewDate": "2026-11-22",
+          "totalAttempts": 3,
+          "correctCount": 3,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:17:52.262Z",
+          "updatedAt": "2026-11-08T13:15:20.082Z"
+        },
+        "seed-4-achieve": {
+          "wordId": "seed-4-achieve",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 2,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:17:53.952Z",
+          "updatedAt": "2026-11-08T13:13:11.976Z"
+        },
+        "seed-5-active": {
+          "wordId": "seed-5-active",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 2,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:17:58.162Z",
+          "updatedAt": "2026-11-08T13:09:18.591Z"
+        },
+        "seed-6-admire": {
+          "wordId": "seed-6-admire",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 2,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:20:50.699Z",
+          "updatedAt": "2026-11-08T12:22:39.057Z"
+        },
+        "seed-7-advice": {
+          "wordId": "seed-7-advice",
+          "familiarity": 1,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:20:58.485Z",
+          "updatedAt": "2026-11-08T12:24:55.428Z"
+        },
+        "seed-8-afford": {
+          "wordId": "seed-8-afford",
+          "familiarity": 1,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-09",
+          "totalAttempts": 2,
+          "correctCount": 1,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-08T12:21:03.276Z",
+          "updatedAt": "2026-11-08T13:14:39.159Z"
+        },
+        "seed-9-agreement": {
+          "wordId": "seed-9-agreement",
+          "familiarity": 1,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:21:06.046Z",
+          "updatedAt": "2026-11-08T12:25:13.908Z"
+        },
+        "seed-10-ancient": {
+          "wordId": "seed-10-ancient",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:21:11.543Z",
+          "updatedAt": "2026-11-08T13:26:17.931Z"
+        },
+        "seed-11-annoy": {
+          "wordId": "seed-11-annoy",
+          "familiarity": 0,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-09",
+          "totalAttempts": 2,
+          "correctCount": 1,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-08T12:29:30.273Z",
+          "updatedAt": "2026-11-08T13:12:38.454Z"
+        },
+        "seed-12-apologize": {
+          "wordId": "seed-12-apologize",
+          "familiarity": 1,
+          "reviewInterval": 7,
+          "nextReviewDate": "2026-11-15",
+          "totalAttempts": 3,
+          "correctCount": 2,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:29:31.841Z",
+          "updatedAt": "2026-11-08T13:50:06.934Z"
+        },
+        "seed-13-appear": {
+          "wordId": "seed-13-appear",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:29:33.433Z",
+          "updatedAt": "2026-11-08T12:29:43.722Z"
+        },
+        "seed-14-attention": {
+          "wordId": "seed-14-attention",
+          "familiarity": 1,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:29:35.461Z",
+          "updatedAt": "2026-11-08T12:30:19.063Z"
+        },
+        "seed-15-attract": {
+          "wordId": "seed-15-attract",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T12:29:36.732Z",
+          "updatedAt": "2026-11-08T12:30:25.156Z"
+        },
+        "seed-17-balance": {
+          "wordId": "seed-17-balance",
+          "familiarity": 1,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T13:08:09.387Z",
+          "updatedAt": "2026-11-08T13:08:18.149Z"
+        },
+        "seed-16-average": {
+          "wordId": "seed-16-average",
+          "familiarity": 1,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 3,
+          "correctCount": 2,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T13:08:10.919Z",
+          "updatedAt": "2026-11-08T13:51:16.251Z"
+        },
+        "seed-18-behavior": {
+          "wordId": "seed-18-behavior",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T13:09:59.609Z",
+          "updatedAt": "2026-11-08T13:10:54.378Z"
+        },
+        "seed-19-believe": {
+          "wordId": "seed-19-believe",
+          "familiarity": 1,
+          "reviewInterval": 7,
+          "nextReviewDate": "2026-11-15",
+          "totalAttempts": 2,
+          "correctCount": 2,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T13:10:02.396Z",
+          "updatedAt": "2026-11-08T13:14:24.990Z"
+        },
+        "seed-21-brave": {
+          "wordId": "seed-21-brave",
+          "familiarity": 0,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-08T13:11:57.440Z",
+          "updatedAt": "2026-11-08T13:12:30.806Z"
+        },
+        "seed-20-benefit": {
+          "wordId": "seed-20-benefit",
+          "familiarity": 0,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-09",
+          "totalAttempts": 2,
+          "correctCount": 1,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-08T13:12:02.682Z",
+          "updatedAt": "2026-11-08T13:51:21.819Z"
+        },
+        "seed-22-brilliant": {
+          "wordId": "seed-22-brilliant",
+          "familiarity": 0,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-09",
+          "totalAttempts": 1,
+          "correctCount": 0,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-08T13:13:04.351Z",
+          "updatedAt": "2026-11-08T13:26:22.827Z"
+        },
+        "seed-23-calm": {
+          "wordId": "seed-23-calm",
+          "familiarity": 0,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-08",
+          "totalAttempts": 0,
+          "correctCount": 0,
+          "lastResult": null,
+          "firstTestedAt": "2026-11-08T13:14:21.923Z",
+          "updatedAt": "2026-11-08T13:14:21.923Z"
+        },
+        "seed-24-celebrate": {
+          "wordId": "seed-24-celebrate",
+          "familiarity": 1,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-09",
+          "totalAttempts": 1,
+          "correctCount": 0,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-08T13:26:15.426Z",
+          "updatedAt": "2026-11-08T13:51:06.057Z"
+        },
+        "seed-25-challenge": {
+          "wordId": "seed-25-challenge",
+          "familiarity": 1,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-09",
+          "totalAttempts": 1,
+          "correctCount": 0,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-08T13:49:02.669Z",
+          "updatedAt": "2026-11-08T13:50:01.792Z"
+        },
+        "seed-26-character": {
+          "wordId": "seed-26-character",
+          "familiarity": 0,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-08",
+          "totalAttempts": 0,
+          "correctCount": 0,
+          "lastResult": null,
+          "firstTestedAt": "2026-11-08T13:50:14.371Z",
+          "updatedAt": "2026-11-08T13:50:14.371Z"
+        },
+        "seed-27-comfortable": {
+          "wordId": "seed-27-comfortable",
+          "familiarity": 0,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-08",
+          "totalAttempts": 0,
+          "correctCount": 0,
+          "lastResult": null,
+          "firstTestedAt": "2026-11-08T13:51:14.844Z",
+          "updatedAt": "2026-11-08T13:51:14.844Z"
+        }
+      },
+      "dailyPlans": {
+        "2026-11-08": {
+          "id": "plan-2026-11-08",
+          "date": "2026-11-08",
+          "difficulty": "regular",
+          "targetNewWordCount": 15,
+          "totalWordCount": 15,
+          "isCompleted": true,
+          "bonusAwarded": true,
+          "currentBatchIndex": 4,
+          "currentTaskIndex": 3,
+          "batches": [
+            {
+              "batchIndex": 0,
+              "wordIds": [
+                "seed-1-ability",
+                "seed-2-abroad",
+                "seed-3-accept",
+                "seed-4-achieve",
+                "seed-5-active"
+              ],
+              "words": [
+                {
+                  "id": "seed-1-ability",
+                  "word": "ability",
+                  "phonetic": "/əˈbɪləti/",
+                  "meaning": "能力；才能",
+                  "pos": "n.",
+                  "example": "She has the ability to pass the exam easily.",
+                  "translation": "她有轻松通过考试的能力。",
+                  "createdAt": "2026-11-08T11:19:52.881Z"
+                },
+                {
+                  "id": "seed-2-abroad",
+                  "word": "abroad",
+                  "phonetic": "/əˈbrɔːd/",
+                  "meaning": "在国外；到国外",
+                  "pos": "adv.",
+                  "example": "My cousin went abroad for university.",
+                  "translation": "我堂兄出国读大学了。",
+                  "createdAt": "2026-11-08T11:19:52.882Z"
+                },
+                {
+                  "id": "seed-3-accept",
+                  "word": "accept",
+                  "phonetic": "/əkˈsept/",
+                  "meaning": "接受；承认",
+                  "pos": "v.",
+                  "example": "He happily accepted our invitation.",
+                  "translation": "他高兴地接受了我们的邀请。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-4-achieve",
+                  "word": "achieve",
+                  "phonetic": "/əˈtʃiːv/",
+                  "meaning": "实现；达到",
+                  "pos": "v.",
+                  "example": "Work hard and you will achieve your dream.",
+                  "translation": "努力付出，你就会实现梦想。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-5-active",
+                  "word": "active",
+                  "phonetic": "/ˈæktɪv/",
+                  "meaning": "积极的；活跃的",
+                  "pos": "adj.",
+                  "example": "Peter is very active in sports.",
+                  "translation": "彼得在体育方面很活跃。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "2026-11-08-b0-t0-seed-3-accept",
+                  "wordId": "seed-3-accept",
+                  "word": {
+                    "id": "seed-3-accept",
+                    "word": "accept",
+                    "phonetic": "/əkˈsept/",
+                    "meaning": "接受；承认",
+                    "pos": "v.",
+                    "example": "He happily accepted our invitation.",
+                    "translation": "他高兴地接受了我们的邀请。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b0-t1-seed-2-abroad",
+                  "wordId": "seed-2-abroad",
+                  "word": {
+                    "id": "seed-2-abroad",
+                    "word": "abroad",
+                    "phonetic": "/əˈbrɔːd/",
+                    "meaning": "在国外；到国外",
+                    "pos": "adv.",
+                    "example": "My cousin went abroad for university.",
+                    "translation": "我堂兄出国读大学了。",
+                    "createdAt": "2026-11-08T11:19:52.882Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b0-t2-seed-5-active",
+                  "wordId": "seed-5-active",
+                  "word": {
+                    "id": "seed-5-active",
+                    "word": "active",
+                    "phonetic": "/ˈæktɪv/",
+                    "meaning": "积极的；活跃的",
+                    "pos": "adj.",
+                    "example": "Peter is very active in sports.",
+                    "translation": "彼得在体育方面很活跃。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": false,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b0-t3-seed-4-achieve",
+                  "wordId": "seed-4-achieve",
+                  "word": {
+                    "id": "seed-4-achieve",
+                    "word": "achieve",
+                    "phonetic": "/əˈtʃiːv/",
+                    "meaning": "实现；达到",
+                    "pos": "v.",
+                    "example": "Work hard and you will achieve your dream.",
+                    "translation": "努力付出，你就会实现梦想。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SPELLING",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": false,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b0-t4-seed-1-ability",
+                  "wordId": "seed-1-ability",
+                  "word": {
+                    "id": "seed-1-ability",
+                    "word": "ability",
+                    "phonetic": "/əˈbɪləti/",
+                    "meaning": "能力；才能",
+                    "pos": "n.",
+                    "example": "She has the ability to pass the exam easily.",
+                    "translation": "她有轻松通过考试的能力。",
+                    "createdAt": "2026-11-08T11:19:52.881Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                }
+              ]
+            },
+            {
+              "batchIndex": 1,
+              "wordIds": [
+                "seed-6-admire",
+                "seed-7-advice",
+                "seed-8-afford",
+                "seed-9-agreement",
+                "seed-10-ancient"
+              ],
+              "words": [
+                {
+                  "id": "seed-6-admire",
+                  "word": "admire",
+                  "phonetic": "/ədˈmaɪə(r)/",
+                  "meaning": "钦佩；赞赏",
+                  "pos": "v.",
+                  "example": "I admire doctors for their hard work.",
+                  "translation": "我钦佩医生的辛勤付出。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-7-advice",
+                  "word": "advice",
+                  "phonetic": "/ədˈvaɪs/",
+                  "meaning": "建议；忠告",
+                  "pos": "n.",
+                  "example": "Can you give me some good advice?",
+                  "translation": "你能给我一些好建议吗？",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-8-afford",
+                  "word": "afford",
+                  "phonetic": "/əˈfɔːd/",
+                  "meaning": "买得起；负担得起",
+                  "pos": "v.",
+                  "example": "We can afford this new computer.",
+                  "translation": "我们买得起这台新电脑。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-9-agreement",
+                  "word": "agreement",
+                  "phonetic": "/əˈɡriːmənt/",
+                  "meaning": "协议；一致",
+                  "pos": "n.",
+                  "example": "They finally reached an agreement.",
+                  "translation": "他们最终达成了一致协议。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-10-ancient",
+                  "word": "ancient",
+                  "phonetic": "/ˈeɪnʃənt/",
+                  "meaning": "古代的；古老的",
+                  "pos": "adj.",
+                  "example": "China has a long and ancient history.",
+                  "translation": "中国有着悠久而古老的一段历史。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "2026-11-08-b1-t0-seed-8-afford",
+                  "wordId": "seed-8-afford",
+                  "word": {
+                    "id": "seed-8-afford",
+                    "word": "afford",
+                    "phonetic": "/əˈfɔːd/",
+                    "meaning": "买得起；负担得起",
+                    "pos": "v.",
+                    "example": "We can afford this new computer.",
+                    "translation": "我们买得起这台新电脑。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b1-t1-seed-6-admire",
+                  "wordId": "seed-6-admire",
+                  "word": {
+                    "id": "seed-6-admire",
+                    "word": "admire",
+                    "phonetic": "/ədˈmaɪə(r)/",
+                    "meaning": "钦佩；赞赏",
+                    "pos": "v.",
+                    "example": "I admire doctors for their hard work.",
+                    "translation": "我钦佩医生的辛勤付出。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": false,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b1-t2-seed-7-advice",
+                  "wordId": "seed-7-advice",
+                  "word": {
+                    "id": "seed-7-advice",
+                    "word": "advice",
+                    "phonetic": "/ədˈvaɪs/",
+                    "meaning": "建议；忠告",
+                    "pos": "n.",
+                    "example": "Can you give me some good advice?",
+                    "translation": "你能给我一些好建议吗？",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SPELLING",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b1-t3-seed-10-ancient",
+                  "wordId": "seed-10-ancient",
+                  "word": {
+                    "id": "seed-10-ancient",
+                    "word": "ancient",
+                    "phonetic": "/ˈeɪnʃənt/",
+                    "meaning": "古代的；古老的",
+                    "pos": "adj.",
+                    "example": "China has a long and ancient history.",
+                    "translation": "中国有着悠久而古老的一段历史。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b1-t4-seed-9-agreement",
+                  "wordId": "seed-9-agreement",
+                  "word": {
+                    "id": "seed-9-agreement",
+                    "word": "agreement",
+                    "phonetic": "/əˈɡriːmənt/",
+                    "meaning": "协议；一致",
+                    "pos": "n.",
+                    "example": "They finally reached an agreement.",
+                    "translation": "他们最终达成了一致协议。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                }
+              ]
+            },
+            {
+              "batchIndex": 2,
+              "wordIds": [
+                "seed-11-annoy",
+                "seed-12-apologize",
+                "seed-13-appear",
+                "seed-14-attention",
+                "seed-15-attract"
+              ],
+              "words": [
+                {
+                  "id": "seed-11-annoy",
+                  "word": "annoy",
+                  "phonetic": "/əˈnɔɪ/",
+                  "meaning": "打扰；使烦恼",
+                  "pos": "v.",
+                  "example": "Loud noise can annoy people easily.",
+                  "translation": "巨大的噪音很容易让人心烦。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-12-apologize",
+                  "word": "apologize",
+                  "phonetic": "/əˈpɒlədʒaɪz/",
+                  "meaning": "道歉；认错",
+                  "pos": "v.",
+                  "example": "He apologized to the teacher for being late.",
+                  "translation": "他因迟到向老师道歉。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-13-appear",
+                  "word": "appear",
+                  "phonetic": "/əˈpɪə(r)/",
+                  "meaning": "出现；显得",
+                  "pos": "v.",
+                  "example": "A rainbow appeared in the sky after the rain.",
+                  "translation": "雨后天空中出现了一道彩虹。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-14-attention",
+                  "word": "attention",
+                  "phonetic": "/əˈtenʃn/",
+                  "meaning": "注意；专心",
+                  "pos": "n.",
+                  "example": "Pay attention to your handwriting.",
+                  "translation": "注意你的书写规范。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-15-attract",
+                  "word": "attract",
+                  "phonetic": "/əˈtrækt/",
+                  "meaning": "吸引；引起",
+                  "pos": "v.",
+                  "example": "The flower garden attracts many bees.",
+                  "translation": "这个花园吸引了许多蜜蜂。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "2026-11-08-b2-t0-seed-13-appear",
+                  "wordId": "seed-13-appear",
+                  "word": {
+                    "id": "seed-13-appear",
+                    "word": "appear",
+                    "phonetic": "/əˈpɪə(r)/",
+                    "meaning": "出现；显得",
+                    "pos": "v.",
+                    "example": "A rainbow appeared in the sky after the rain.",
+                    "translation": "雨后天空中出现了一道彩虹。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b2-t1-seed-12-apologize",
+                  "wordId": "seed-12-apologize",
+                  "word": {
+                    "id": "seed-12-apologize",
+                    "word": "apologize",
+                    "phonetic": "/əˈpɒlədʒaɪz/",
+                    "meaning": "道歉；认错",
+                    "pos": "v.",
+                    "example": "He apologized to the teacher for being late.",
+                    "translation": "他因迟到向老师道歉。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SPELLING",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": false,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b2-t2-seed-14-attention",
+                  "wordId": "seed-14-attention",
+                  "word": {
+                    "id": "seed-14-attention",
+                    "word": "attention",
+                    "phonetic": "/əˈtenʃn/",
+                    "meaning": "注意；专心",
+                    "pos": "n.",
+                    "example": "Pay attention to your handwriting.",
+                    "translation": "注意你的书写规范。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b2-t3-seed-15-attract",
+                  "wordId": "seed-15-attract",
+                  "word": {
+                    "id": "seed-15-attract",
+                    "word": "attract",
+                    "phonetic": "/əˈtrækt/",
+                    "meaning": "吸引；引起",
+                    "pos": "v.",
+                    "example": "The flower garden attracts many bees.",
+                    "translation": "这个花园吸引了许多蜜蜂。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "2026-11-08-b2-t4-seed-11-annoy",
+                  "wordId": "seed-11-annoy",
+                  "word": {
+                    "id": "seed-11-annoy",
+                    "word": "annoy",
+                    "phonetic": "/əˈnɔɪ/",
+                    "meaning": "打扰；使烦恼",
+                    "pos": "v.",
+                    "example": "Loud noise can annoy people easily.",
+                    "translation": "巨大的噪音很容易让人心烦。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                }
+              ]
+            }
+          ],
+          "createdAt": "2026-11-08T12:17:31.550Z",
+          "updatedAt": "2026-11-08T13:50:01.781Z"
+        }
+      },
+      "dailyStudyTime": {
+        "2026-11-08": 15
+      }
+    },
+    "admin": {
+      "settings": {
+        "id": "admin",
+        "studentName": "系统管理员",
+        "difficulty": "regular",
+        "volume": 1,
+        "speechRate": 0.85,
+        "accent": "uk",
+        "streakDays": 0,
+        "totalPoints": 0,
+        "lastCompletedDate": null
+      },
+      "records": {
+        "seed-1-ability": {
+          "wordId": "seed-1-ability",
+          "familiarity": 1,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-08",
+          "totalAttempts": 0,
+          "correctCount": 0,
+          "lastResult": null,
+          "firstTestedAt": "2026-11-08T15:21:20.911Z",
+          "updatedAt": "2026-11-08T15:21:35.684Z"
+        },
+        "seed-2-abroad": {
+          "wordId": "seed-2-abroad",
+          "familiarity": 1,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-08",
+          "totalAttempts": 0,
+          "correctCount": 0,
+          "lastResult": null,
+          "firstTestedAt": "2026-11-08T15:21:39.667Z",
+          "updatedAt": "2026-11-08T15:21:39.667Z"
+        }
+      },
+      "dailyPlans": {
+        "2026-11-08": {
+          "id": "plan-2026-11-08-admin",
+          "date": "2026-11-08",
+          "difficulty": "regular",
+          "targetNewWordCount": 15,
+          "totalWordCount": 15,
+          "isCompleted": false,
+          "bonusAwarded": false,
+          "currentBatchIndex": 0,
+          "currentTaskIndex": 0,
+          "batches": [
+            {
+              "batchIndex": 0,
+              "wordIds": [
+                "seed-1-ability",
+                "seed-2-abroad",
+                "seed-3-accept",
+                "seed-4-achieve",
+                "seed-5-active"
+              ],
+              "words": [
+                {
+                  "id": "seed-1-ability",
+                  "word": "ability",
+                  "phonetic": "/əˈbɪləti/",
+                  "meaning": "能力；才能",
+                  "pos": "n.",
+                  "example": "She has the ability to pass the exam easily.",
+                  "translation": "她有轻松通过考试的能力。",
+                  "createdAt": "2026-11-08T11:19:52.881Z"
+                },
+                {
+                  "id": "seed-2-abroad",
+                  "word": "abroad",
+                  "phonetic": "/əˈbrɔːd/",
+                  "meaning": "在国外；到国外",
+                  "pos": "adv.",
+                  "example": "My cousin went abroad for university.",
+                  "translation": "我堂兄出国读大学了。",
+                  "createdAt": "2026-11-08T11:19:52.882Z"
+                },
+                {
+                  "id": "seed-3-accept",
+                  "word": "accept",
+                  "phonetic": "/əkˈsept/",
+                  "meaning": "接受；承认",
+                  "pos": "v.",
+                  "example": "He happily accepted our invitation.",
+                  "translation": "他高兴地接受了我们的邀请。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-4-achieve",
+                  "word": "achieve",
+                  "phonetic": "/əˈtʃiːv/",
+                  "meaning": "实现；达到",
+                  "pos": "v.",
+                  "example": "Work hard and you will achieve your dream.",
+                  "translation": "努力付出，你就会实现梦想。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-5-active",
+                  "word": "active",
+                  "phonetic": "/ˈæktɪv/",
+                  "meaning": "积极的；活跃的",
+                  "pos": "adj.",
+                  "example": "Peter is very active in sports.",
+                  "translation": "彼得在体育方面很活跃。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "2026-11-08-b0-t0-seed-5-active",
+                  "wordId": "seed-5-active",
+                  "word": {
+                    "id": "seed-5-active",
+                    "word": "active",
+                    "phonetic": "/ˈæktɪv/",
+                    "meaning": "积极的；活跃的",
+                    "pos": "adj.",
+                    "example": "Peter is very active in sports.",
+                    "translation": "彼得在体育方面很活跃。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b0-t1-seed-1-ability",
+                  "wordId": "seed-1-ability",
+                  "word": {
+                    "id": "seed-1-ability",
+                    "word": "ability",
+                    "phonetic": "/əˈbɪləti/",
+                    "meaning": "能力；才能",
+                    "pos": "n.",
+                    "example": "She has the ability to pass the exam easily.",
+                    "translation": "她有轻松通过考试的能力。",
+                    "createdAt": "2026-11-08T11:19:52.881Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b0-t2-seed-4-achieve",
+                  "wordId": "seed-4-achieve",
+                  "word": {
+                    "id": "seed-4-achieve",
+                    "word": "achieve",
+                    "phonetic": "/əˈtʃiːv/",
+                    "meaning": "实现；达到",
+                    "pos": "v.",
+                    "example": "Work hard and you will achieve your dream.",
+                    "translation": "努力付出，你就会实现梦想。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b0-t3-seed-2-abroad",
+                  "wordId": "seed-2-abroad",
+                  "word": {
+                    "id": "seed-2-abroad",
+                    "word": "abroad",
+                    "phonetic": "/əˈbrɔːd/",
+                    "meaning": "在国外；到国外",
+                    "pos": "adv.",
+                    "example": "My cousin went abroad for university.",
+                    "translation": "我堂兄出国读大学了。",
+                    "createdAt": "2026-11-08T11:19:52.882Z"
+                  },
+                  "taskType": "SPELLING",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b0-t4-seed-3-accept",
+                  "wordId": "seed-3-accept",
+                  "word": {
+                    "id": "seed-3-accept",
+                    "word": "accept",
+                    "phonetic": "/əkˈsept/",
+                    "meaning": "接受；承认",
+                    "pos": "v.",
+                    "example": "He happily accepted our invitation.",
+                    "translation": "他高兴地接受了我们的邀请。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                }
+              ]
+            },
+            {
+              "batchIndex": 1,
+              "wordIds": [
+                "seed-6-admire",
+                "seed-7-advice",
+                "seed-8-afford",
+                "seed-9-agreement",
+                "seed-10-ancient"
+              ],
+              "words": [
+                {
+                  "id": "seed-6-admire",
+                  "word": "admire",
+                  "phonetic": "/ədˈmaɪə(r)/",
+                  "meaning": "钦佩；赞赏",
+                  "pos": "v.",
+                  "example": "I admire doctors for their hard work.",
+                  "translation": "我钦佩医生的辛勤付出。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-7-advice",
+                  "word": "advice",
+                  "phonetic": "/ədˈvaɪs/",
+                  "meaning": "建议；忠告",
+                  "pos": "n.",
+                  "example": "Can you give me some good advice?",
+                  "translation": "你能给我一些好建议吗？",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-8-afford",
+                  "word": "afford",
+                  "phonetic": "/əˈfɔːd/",
+                  "meaning": "买得起；负担得起",
+                  "pos": "v.",
+                  "example": "We can afford this new computer.",
+                  "translation": "我们买得起这台新电脑。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-9-agreement",
+                  "word": "agreement",
+                  "phonetic": "/əˈɡriːmənt/",
+                  "meaning": "协议；一致",
+                  "pos": "n.",
+                  "example": "They finally reached an agreement.",
+                  "translation": "他们最终达成了一致协议。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-10-ancient",
+                  "word": "ancient",
+                  "phonetic": "/ˈeɪnʃənt/",
+                  "meaning": "古代的；古老的",
+                  "pos": "adj.",
+                  "example": "China has a long and ancient history.",
+                  "translation": "中国有着悠久而古老的一段历史。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "2026-11-08-b1-t0-seed-6-admire",
+                  "wordId": "seed-6-admire",
+                  "word": {
+                    "id": "seed-6-admire",
+                    "word": "admire",
+                    "phonetic": "/ədˈmaɪə(r)/",
+                    "meaning": "钦佩；赞赏",
+                    "pos": "v.",
+                    "example": "I admire doctors for their hard work.",
+                    "translation": "我钦佩医生的辛勤付出。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b1-t1-seed-7-advice",
+                  "wordId": "seed-7-advice",
+                  "word": {
+                    "id": "seed-7-advice",
+                    "word": "advice",
+                    "phonetic": "/ədˈvaɪs/",
+                    "meaning": "建议；忠告",
+                    "pos": "n.",
+                    "example": "Can you give me some good advice?",
+                    "translation": "你能给我一些好建议吗？",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b1-t2-seed-10-ancient",
+                  "wordId": "seed-10-ancient",
+                  "word": {
+                    "id": "seed-10-ancient",
+                    "word": "ancient",
+                    "phonetic": "/ˈeɪnʃənt/",
+                    "meaning": "古代的；古老的",
+                    "pos": "adj.",
+                    "example": "China has a long and ancient history.",
+                    "translation": "中国有着悠久而古老的一段历史。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SPELLING",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b1-t3-seed-8-afford",
+                  "wordId": "seed-8-afford",
+                  "word": {
+                    "id": "seed-8-afford",
+                    "word": "afford",
+                    "phonetic": "/əˈfɔːd/",
+                    "meaning": "买得起；负担得起",
+                    "pos": "v.",
+                    "example": "We can afford this new computer.",
+                    "translation": "我们买得起这台新电脑。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b1-t4-seed-9-agreement",
+                  "wordId": "seed-9-agreement",
+                  "word": {
+                    "id": "seed-9-agreement",
+                    "word": "agreement",
+                    "phonetic": "/əˈɡriːmənt/",
+                    "meaning": "协议；一致",
+                    "pos": "n.",
+                    "example": "They finally reached an agreement.",
+                    "translation": "他们最终达成了一致协议。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                }
+              ]
+            },
+            {
+              "batchIndex": 2,
+              "wordIds": [
+                "seed-11-annoy",
+                "seed-12-apologize",
+                "seed-13-appear",
+                "seed-14-attention",
+                "seed-15-attract"
+              ],
+              "words": [
+                {
+                  "id": "seed-11-annoy",
+                  "word": "annoy",
+                  "phonetic": "/əˈnɔɪ/",
+                  "meaning": "打扰；使烦恼",
+                  "pos": "v.",
+                  "example": "Loud noise can annoy people easily.",
+                  "translation": "巨大的噪音很容易让人心烦。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-12-apologize",
+                  "word": "apologize",
+                  "phonetic": "/əˈpɒlədʒaɪz/",
+                  "meaning": "道歉；认错",
+                  "pos": "v.",
+                  "example": "He apologized to the teacher for being late.",
+                  "translation": "他因迟到向老师道歉。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-13-appear",
+                  "word": "appear",
+                  "phonetic": "/əˈpɪə(r)/",
+                  "meaning": "出现；显得",
+                  "pos": "v.",
+                  "example": "A rainbow appeared in the sky after the rain.",
+                  "translation": "雨后天空中出现了一道彩虹。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-14-attention",
+                  "word": "attention",
+                  "phonetic": "/əˈtenʃn/",
+                  "meaning": "注意；专心",
+                  "pos": "n.",
+                  "example": "Pay attention to your handwriting.",
+                  "translation": "注意你的书写规范。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                },
+                {
+                  "id": "seed-15-attract",
+                  "word": "attract",
+                  "phonetic": "/əˈtrækt/",
+                  "meaning": "吸引；引起",
+                  "pos": "v.",
+                  "example": "The flower garden attracts many bees.",
+                  "translation": "这个花园吸引了许多蜜蜂。",
+                  "createdAt": "2026-11-08T11:19:52.883Z"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "2026-11-08-b2-t0-seed-14-attention",
+                  "wordId": "seed-14-attention",
+                  "word": {
+                    "id": "seed-14-attention",
+                    "word": "attention",
+                    "phonetic": "/əˈtenʃn/",
+                    "meaning": "注意；专心",
+                    "pos": "n.",
+                    "example": "Pay attention to your handwriting.",
+                    "translation": "注意你的书写规范。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b2-t1-seed-11-annoy",
+                  "wordId": "seed-11-annoy",
+                  "word": {
+                    "id": "seed-11-annoy",
+                    "word": "annoy",
+                    "phonetic": "/əˈnɔɪ/",
+                    "meaning": "打扰；使烦恼",
+                    "pos": "v.",
+                    "example": "Loud noise can annoy people easily.",
+                    "translation": "巨大的噪音很容易让人心烦。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SPELLING",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b2-t2-seed-15-attract",
+                  "wordId": "seed-15-attract",
+                  "word": {
+                    "id": "seed-15-attract",
+                    "word": "attract",
+                    "phonetic": "/əˈtrækt/",
+                    "meaning": "吸引；引起",
+                    "pos": "v.",
+                    "example": "The flower garden attracts many bees.",
+                    "translation": "这个花园吸引了许多蜜蜂。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "MEANING_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b2-t3-seed-12-apologize",
+                  "wordId": "seed-12-apologize",
+                  "word": {
+                    "id": "seed-12-apologize",
+                    "word": "apologize",
+                    "phonetic": "/əˈpɒlədʒaɪz/",
+                    "meaning": "道歉；认错",
+                    "pos": "v.",
+                    "example": "He apologized to the teacher for being late.",
+                    "translation": "他因迟到向老师道歉。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "AUDIO_CHOICE",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                },
+                {
+                  "taskId": "2026-11-08-b2-t4-seed-13-appear",
+                  "wordId": "seed-13-appear",
+                  "word": {
+                    "id": "seed-13-appear",
+                    "word": "appear",
+                    "phonetic": "/əˈpɪə(r)/",
+                    "meaning": "出现；显得",
+                    "pos": "v.",
+                    "example": "A rainbow appeared in the sky after the rain.",
+                    "translation": "雨后天空中出现了一道彩虹。",
+                    "createdAt": "2026-11-08T11:19:52.883Z"
+                  },
+                  "taskType": "SENTENCE_FILL",
+                  "isAnswered": false,
+                  "isFirstTryCorrect": null,
+                  "scoreAwarded": false
+                }
+              ]
+            }
+          ],
+          "createdAt": "2026-11-08T15:20:53.850Z",
+          "updatedAt": "2026-11-08T15:20:53.850Z"
+        }
+      }
     }
   }
 }

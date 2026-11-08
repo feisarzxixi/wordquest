@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { LocalDB } from '../../../lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const allData = LocalDB.exportAll();
   return new NextResponse(JSON.stringify(allData, null, 2), {
