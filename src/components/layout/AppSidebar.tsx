@@ -21,8 +21,29 @@ export const AppSidebar: React.FC = () => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
 
   useEffect(() => {
-    setCurrentUser(ClientSession.getCurrentUser());
-  }, []);
+    const syncUser = () => {
+      const user = ClientSession.getCurrentUser();
+      setCurrentUser(user);
+    };
+
+    syncUser();
+
+    const handleCustomChange = (e: any) => {
+      if (e.detail) {
+        setCurrentUser(e.detail);
+      } else {
+        syncUser();
+      }
+    };
+
+    window.addEventListener('wq_user_changed', handleCustomChange);
+    window.addEventListener('storage', syncUser);
+
+    return () => {
+      window.removeEventListener('wq_user_changed', handleCustomChange);
+      window.removeEventListener('storage', syncUser);
+    };
+  }, [pathname]);
 
   return (
     <>
@@ -71,11 +92,11 @@ export const AppSidebar: React.FC = () => {
           >
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                {currentUser?.realName.slice(0, 1) || '学'}
+                {currentUser?.realName ? currentUser.realName.slice(0, 1) : (currentUser?.username?.slice(0, 1) || '学')}
               </div>
               <div className="overflow-hidden">
                 <p className="text-sm font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
-                  {currentUser?.realName || '张同学'}
+                  {currentUser?.realName || currentUser?.username || '未登录'}
                 </p>
                 <p className="text-[11px] text-slate-400 font-medium">点击快速换号</p>
               </div>

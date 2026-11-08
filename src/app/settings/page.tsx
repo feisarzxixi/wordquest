@@ -79,6 +79,9 @@ export default function SettingsPage() {
 
       if (res.success) {
         SoundService.setAccent(accent);
+        const updatedUser = { ...user, realName: studentName };
+        ClientSession.setCurrentUser(updatedUser);
+        setCurrentUser(updatedUser);
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }

@@ -43,9 +43,9 @@ export default function LoginPage() {
         ClientSession.setCurrentUser(res.data);
         if (res.data.role === 'admin') {
           sessionStorage.setItem('wq_admin_auth', 'true');
-          router.push('/admin');
+          window.location.href = '/admin';
         } else {
-          router.push('/');
+          window.location.href = '/';
         }
       } else {
         if (res.status === 'pending') {

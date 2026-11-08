@@ -46,6 +46,7 @@ export class ClientSession {
       localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(user));
       this.syncCookie(user.id);
       this.addSavedProfile(user);
+      window.dispatchEvent(new CustomEvent('wq_user_changed', { detail: user }));
     } catch (e) {
       console.warn('Save user failed:', e);
     }
