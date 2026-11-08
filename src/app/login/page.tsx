@@ -199,7 +199,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   required
-                  placeholder="学生账号 或 ADMIN"
+                  placeholder="请输入您的账号"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600"
@@ -214,7 +214,7 @@ export default function LoginPage() {
                 <input
                   type="password"
                   required
-                  placeholder="请输入密码 (管理员密码: admin)"
+                  placeholder="请输入您的密码"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 font-semibold text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600"
@@ -225,10 +225,6 @@ export default function LoginPage() {
             <Button type="submit" disabled={loading} className="w-full mt-2 py-3 text-sm">
               {loading ? '正在验证...' : '登 录'}
             </Button>
-
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 leading-relaxed">
-              💡 提示：输入学生账号直接开启词汇学习；管理员输入 <span className="font-mono font-bold text-indigo-600">ADMIN</span> 密码 <span className="font-mono font-bold text-indigo-600">admin</span> 直接进入管理控制台。
-            </div>
 
             <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-100">
               <span>新同学尚未开通？</span>
