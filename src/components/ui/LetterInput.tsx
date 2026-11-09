@@ -196,14 +196,20 @@ export const LetterInput: React.FC<LetterInputProps> = ({
         </div>
       </div>
 
-      {/* 3. 提交确认按钮 */}
+      {/* 3. 提交确认按钮：未填满时显示明确提示，填满后高亮呈现确认提交 */}
       <button
         type="button"
         onClick={handleSubmit}
         disabled={!isAllFilled || disabled}
-        className="w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-98 disabled:opacity-40 disabled:pointer-events-none text-white font-extrabold text-base shadow-lg shadow-indigo-100 transition-all"
+        className={`w-full max-w-sm py-3.5 px-6 rounded-2xl font-extrabold text-base transition-all flex items-center justify-center gap-2 ${
+          isAllFilled
+            ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 active:scale-95 cursor-pointer'
+            : 'bg-slate-200 text-slate-600 border border-slate-300 shadow-none cursor-not-allowed'
+        }`}
       >
-        确认提交 ➔
+        <span className={isAllFilled ? 'text-white font-extrabold' : 'text-slate-600 font-bold'}>
+          {isAllFilled ? '确认提交 ➔' : '请先点击下方字母填满空位'}
+        </span>
       </button>
     </div>
   );

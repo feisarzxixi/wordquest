@@ -82,20 +82,24 @@ export const WordCardView: React.FC<WordCardViewProps> = ({
         )}
 
         {/* 底部双按钮 */}
-        <div className="w-full grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+        <div className="w-full grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
           <button
             type="button"
             onClick={onUnknown}
-            className="py-3.5 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-base transition-all active:scale-95 shadow-sm"
+            className="py-3.5 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 transition-all active:scale-95 shadow-sm flex items-center justify-center cursor-pointer"
           >
-            {COPYWRITING.study.cardUnknown}
+            <span className="font-extrabold text-base sm:text-lg text-slate-800">
+              我不认识
+            </span>
           </button>
           <button
             type="button"
             onClick={onKnown}
-            className="py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-base transition-all active:scale-95 shadow-lg shadow-indigo-100"
+            className="py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center justify-center cursor-pointer"
           >
-            {COPYWRITING.study.cardKnown}
+            <span className="font-extrabold text-base sm:text-lg text-white">
+              我认识
+            </span>
           </button>
         </div>
       </Card>
