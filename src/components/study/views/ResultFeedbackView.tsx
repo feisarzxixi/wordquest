@@ -88,7 +88,7 @@ export const ResultFeedbackView: React.FC<ResultFeedbackViewProps> = ({
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
               {word.word}
             </h1>
-            <SpeakerBtn text={word.word} size="md" autoPlayOnMount />
+            <SpeakerBtn key={`feedback-speaker-${word.word}`} text={word.word} size="md" autoPlayOnMount />
           </div>
 
           <div className="flex items-center gap-2 text-slate-500 font-mono text-sm sm:text-base mb-2.5 sm:mb-4">

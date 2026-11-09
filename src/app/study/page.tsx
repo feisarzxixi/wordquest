@@ -17,6 +17,7 @@ import { FOCUS_EASTER_EGG_MS } from '../../config/learningRules';
 import { COPYWRITING } from '../../config/copywriting';
 import { Card } from '../../components/ui/Card';
 import { initClientImageCache, preloadWordImages } from '../../lib/images/clientImageCache';
+import { SoundService } from '../../lib/audio/SoundService';
 import { ClientSession } from '../../lib/auth/clientSession';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles } from 'lucide-react';
@@ -154,11 +155,12 @@ function StudyInner() {
     fetchSession();
   }, [isPracticeMode]);
 
-  // 管道预加载 4：识记阶段提前预加载后 2~3 个识记单词的图片，点击“我认识”下一张秒出
+  // 管道预加载 4：识记阶段提前预加载后 2~3 个识记单词的图片与发音，点击“我认识”下一张秒出秒读
   useEffect(() => {
     if (studyState === 'BATCH_RECOGNITION' && currentBatch?.words) {
       const upcoming = currentBatch.words.slice(recognitionIndex, recognitionIndex + 3);
       preloadWordImages(upcoming);
+      SoundService.preloadWordAudio(upcoming);
     }
   }, [studyState, recognitionIndex, currentBatch]);
 
@@ -202,19 +204,22 @@ function StudyInner() {
 
       setCurrentBatch(batch);
 
-      // 管道预加载 1：首屏立即并行预加载当前组和下一组的全部单词图片
+      // 管道预加载 1：首屏立即并行预加载当前组和下一组的全部单词图片与外教发音
       if (batch?.words) {
         preloadWordImages(batch.words);
+        SoundService.preloadWordAudio(batch.words);
       }
       if (planData.batches[savedBatchIdx + 1]?.words) {
         preloadWordImages(planData.batches[savedBatchIdx + 1].words);
+        SoundService.preloadWordAudio(planData.batches[savedBatchIdx + 1].words);
       }
 
-      // 管道预加载 2：空闲阶段静默预加载今日剩余所有批次的单词配图
+      // 管道预加载 2：空闲阶段静默预加载今日剩余所有批次的单词配图与音频
       setTimeout(() => {
         for (let b = savedBatchIdx + 2; b < planData.batches.length; b++) {
           if (planData.batches[b]?.words) {
             preloadWordImages(planData.batches[b].words);
+            SoundService.preloadWordAudio(planData.batches[b].words);
           }
         }
       }, 1000);
@@ -246,6 +251,7 @@ function StudyInner() {
         setStudyState('BATCH_RECOGNITION');
         if (batch.words) {
           preloadWordImages(batch.words);
+          SoundService.preloadWordAudio(batch.words);
         }
       } else {
         setStudyState('EMPTY');
@@ -260,13 +266,15 @@ function StudyInner() {
     const task: PlanTaskItem = batch.testTasks[tIdx];
     if (!task) return;
 
-    // 管道预加载 3：在孩子思考读题期间，提前在后台加载本题反馈页配图与下一题配图，实现答对瞬间 0 延迟秒开
+    // 管道预加载 3：在孩子思考读题期间，提前在后台加载本题反馈页配图/音频与下一题配图/音频，实现答对瞬间 0 延迟秒开
     if (task.word) {
       preloadWordImages([task.word]);
+      SoundService.preloadWordAudio([task.word]);
     }
     const nextTask = batch.testTasks[tIdx + 1];
     if (nextTask?.word) {
       preloadWordImages([nextTask.word]);
+      SoundService.preloadWordAudio([nextTask.word]);
     }
 
     const allWords = batch.words;
@@ -494,6 +502,7 @@ function StudyInner() {
       {/* 阶段 1：组内连续认识卡 */}
       {studyState === 'BATCH_RECOGNITION' && currentBatch && (
         <WordCardView
+          key={`recog-${currentBatchIndex}-${recognitionIndex}-${currentBatch.words[recognitionIndex].word}`}
           word={currentBatch.words[recognitionIndex]}
           batchIndex={currentBatchIndex}
           wordIndexInBatch={recognitionIndex}

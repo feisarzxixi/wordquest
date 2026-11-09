@@ -41,7 +41,7 @@ export const AudioQuizView: React.FC<AudioQuizViewProps> = ({
 
         {/* 大号发音喇叭（中央核心） */}
         <div className="flex flex-col items-center gap-3 my-4">
-          <SpeakerBtn text={quiz.word.word} size="lg" autoPlayOnMount />
+          <SpeakerBtn key={`audio-quiz-${quiz.word.word}`} text={quiz.word.word} size="lg" autoPlayOnMount />
           <span className="text-sm font-medium text-slate-400">
             点击喇叭可重复播放发音
           </span>

@@ -46,7 +46,7 @@ export const WordCardView: React.FC<WordCardViewProps> = ({
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
             {word.word}
           </h1>
-          <SpeakerBtn text={word.word} size="lg" autoPlayOnMount />
+          <SpeakerBtn key={`card-speaker-${word.word}`} text={word.word} size="lg" autoPlayOnMount />
         </div>
 
         {/* 音标与词性 */}

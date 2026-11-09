@@ -202,7 +202,7 @@ export default function SettingsPage() {
             <span>发音语速 ({speechRate}x)</span>
             <button
               type="button"
-              onClick={() => SoundService.speak('abandon', speechRate)}
+              onClick={() => SoundService.speak('challenge', speechRate)}
               className="text-xs text-indigo-600 font-bold hover:underline"
             >
               试听单词发音效果

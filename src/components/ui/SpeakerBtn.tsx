@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Volume2 } from 'lucide-react';
 import { SoundService } from '../../lib/audio/SoundService';
 
@@ -18,11 +18,29 @@ export const SpeakerBtn: React.FC<SpeakerBtnProps> = ({
   autoPlayOnMount = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const isMountedRef = useRef(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    isMountedRef.current = true;
+    let timer: NodeJS.Timeout | null = null;
+
     if (autoPlayOnMount && text) {
-      handlePlay();
+      // 微延迟防抖，避免 React 严格模式或页面秒切时的冗余触发
+      timer = setTimeout(() => {
+        if (isMountedRef.current) {
+          handlePlay();
+        }
+      }, 50);
     }
+
+    return () => {
+      isMountedRef.current = false;
+      if (timer) {
+        clearTimeout(timer);
+      }
+      // 组件卸载时安全停止发音，避免切题或翻页产生重叠杂音
+      SoundService.stop();
+    };
   }, [text, autoPlayOnMount]);
 
   const handlePlay = async (e?: React.MouseEvent) => {
@@ -30,9 +48,16 @@ export const SpeakerBtn: React.FC<SpeakerBtnProps> = ({
       e.stopPropagation();
     }
     SoundService.unlockAudioContext();
-    setIsPlaying(true);
-    await SoundService.speak(text);
-    setIsPlaying(false);
+    if (isMountedRef.current) {
+      setIsPlaying(true);
+    }
+    try {
+      await SoundService.speak(text);
+    } finally {
+      if (isMountedRef.current) {
+        setIsPlaying(false);
+      }
+    }
   };
 
   const sizeStyles = {

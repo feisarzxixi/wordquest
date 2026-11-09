@@ -1,8 +1,12 @@
 /**
  * 音频服务与发音适配器 (Sound Service)
  * 1. 优先采用真人外教录音原声流 (纯正英音/美音外教母语发音，彻底解决 iPad 上合成音机械、发瘪、含糊不清的问题)
- * 2. 句子填空与离线场景自动降级至高质量系统神经网络 TTS
+ * 2. 管道式离线音频预加载与 IndexedDB 强缓存（0 延迟秒开，弱网/离线依然流畅）
+ * 3. 严格单声音源与精准销毁时序控制，彻底根除“不同音色重读两遍”的并发与超时残留问题
+ * 4. 仅长例句与语法句启用系统高品质自然 TTS 朗读
  */
+
+import { preloadWordAudio, resolveAudioUrl } from './clientAudioCache';
 
 export class SoundService {
   private static audioCtx: AudioContext | null = null;
@@ -52,7 +56,16 @@ export class SoundService {
   }
 
   /**
-   * 异步可靠获取浏览器可用语音列表（用于例句与离线保底）
+   * 批量预加载单词音频（管道式预加载，弱网/离线秒开）
+   */
+  public static preloadWordAudio(
+    items: Array<{ word: string } | string | null | undefined>
+  ): void {
+    preloadWordAudio(items, this.accent);
+  }
+
+  /**
+   * 异步可靠获取浏览器可用语音列表（用于长例句）
    */
   public static async getVoicesAsync(): Promise<SpeechSynthesisVoice[]> {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -85,7 +98,7 @@ export class SoundService {
   }
 
   /**
-   * 智能挑选最高音质的合成音（备用保底）
+   * 智能挑选最高音质的合成音（备用保底例句）
    */
   public static async selectBestVoice(): Promise<SpeechSynthesisVoice | null> {
     const voices = await this.getVoicesAsync();
@@ -156,52 +169,86 @@ export class SoundService {
   }
 
   /**
-   * 播放真人录音棚原声流 (带时序防重叠控制)
+   * 播放真人录音棚原声流 (带缓存秒开与精准超时销毁，严防后台晚到重播)
    */
   private static playNativeAudio(word: string, rate: number = 1.0, seq: number): Promise<boolean> {
-    return new Promise((resolve) => {
-      try {
-        const typeParam = this.accent === 'uk' ? '1' : '2';
-        const cleanWord = encodeURIComponent(word.trim());
-        const audioUrl = `https://dict.youdao.com/dictvoice?audio=${cleanWord}&type=${typeParam}`;
+    return new Promise(async (resolve) => {
+      let audio: HTMLAudioElement | null = null;
+      let timeoutTimer: NodeJS.Timeout | null = null;
+      let isDone = false;
 
-        const audio = new Audio(audioUrl);
+      const cleanup = () => {
+        if (timeoutTimer) {
+          clearTimeout(timeoutTimer);
+          timeoutTimer = null;
+        }
+      };
+
+      const destroyAudio = () => {
+        cleanup();
+        if (audio) {
+          try {
+            audio.pause();
+            audio.removeAttribute('src');
+            audio.load();
+          } catch (e) {}
+          if (this.currentAudio === audio) {
+            this.currentAudio = null;
+          }
+          audio = null;
+        }
+      };
+
+      try {
+        // 尝试从内存/IndexedDB/强缓存解析音频 URL（若已预载，耗时 < 5ms）
+        const audioUrl = await resolveAudioUrl(word, this.accent);
+
+        // 如果在解析期间已被更新的时序覆盖，直接终止
+        if (this.activePlaybackSeq !== seq) {
+          resolve(true);
+          return;
+        }
+
+        audio = new Audio(audioUrl);
         this.currentAudio = audio;
         audio.playbackRate = Math.max(0.7, Math.min(1.3, rate));
 
-        const timeout = setTimeout(() => {
-          // 如果已经被新的播放覆盖，解决为 true（表示已由新音频接管，不要降级 TTS）
+        // 弱网保护超时 (4秒)：若网络严重受阻，到期强制彻底销毁音频实例，切断后台播放
+        timeoutTimer = setTimeout(() => {
+          if (isDone) return;
+          isDone = true;
+          destroyAudio();
           resolve(this.activePlaybackSeq !== seq);
-        }, 3000);
+        }, 4000);
 
         audio.onended = () => {
-          clearTimeout(timeout);
+          if (isDone) return;
+          isDone = true;
+          cleanup();
+          if (this.currentAudio === audio) {
+            this.currentAudio = null;
+          }
           resolve(true);
         };
 
         audio.onerror = () => {
-          clearTimeout(timeout);
-          // 如果已经被后续点击抢占，视为已处理，严禁降级 TTS
-          if (this.activePlaybackSeq !== seq) {
-            resolve(true);
-          } else {
-            resolve(false);
-          }
+          if (isDone) return;
+          isDone = true;
+          destroyAudio();
+          resolve(this.activePlaybackSeq !== seq);
         };
 
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {
-            clearTimeout(timeout);
-            // 被 pause() 中断或抢占时，绝不降级 TTS！
-            if (this.activePlaybackSeq !== seq) {
-              resolve(true);
-            } else {
-              resolve(false);
-            }
+            if (isDone) return;
+            isDone = true;
+            destroyAudio();
+            resolve(this.activePlaybackSeq !== seq);
           });
         }
       } catch (err) {
+        destroyAudio();
         resolve(this.activePlaybackSeq !== seq);
       }
     });
@@ -209,7 +256,8 @@ export class SoundService {
 
   /**
    * 朗读英文单词、短语或句子
-   * 单词/短语优先调用母语外教真人录音原声，例句/复杂句或网络异常时自动使用高品质 TTS
+   * 单词/短语：100% 走纯正外教原声（结合预载强缓存秒开，绝不回退至机械 TTS 制造重音音色混杂）
+   * 长例句/语法题：使用高品质系统神经网络 TTS
    */
   public static async speak(text: string, rate: number = 0.9): Promise<void> {
     if (typeof window === 'undefined') return;
@@ -219,24 +267,11 @@ export class SoundService {
     const cleanText = text.trim();
     if (!cleanText) return;
 
-    // 递增当前播放时序编号
-    const currentSeq = ++this.activePlaybackSeq;
+    // 1. 彻底掐灭当前所有的旧音频与可能正在播放的系统 TTS，并递增时序版本号
+    this.stop();
+    const currentSeq = this.activePlaybackSeq;
 
-    // 1. 彻底掐灭当前所有的旧音频与可能正在播放的系统 TTS，确保全站单一声源
-    if (this.currentAudio) {
-      try {
-        this.currentAudio.pause();
-        this.currentAudio.src = '';
-      } catch (e) {}
-      this.currentAudio = null;
-    }
-    if ('speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch (e) {}
-    }
-
-    // 判定是否为单词或短语 (通常不包含标点句号、不含超过 4 个单词)
+    // 判定是否为单词或短语 (通常不包含标点句号问号叹号、不含超过 4 个单词且不含 blank 挖空)
     const isSingleWordOrShortPhrase =
       !cleanText.includes('.') &&
       !cleanText.includes('?') &&
@@ -245,15 +280,16 @@ export class SoundService {
       !cleanText.includes('blank');
 
     if (isSingleWordOrShortPhrase) {
-      const nativeOk = await this.playNativeAudio(cleanText, rate, currentSeq);
-      // 如果被后续点击抢占，或者外教原声播放成功，直接退出！绝不降级到 TTS！
-      if (nativeOk || this.activePlaybackSeq !== currentSeq) return;
+      await this.playNativeAudio(cleanText, rate, currentSeq);
+      // 单词/短语发音全由母语外教原声负责！
+      // 无论成功与否，严禁降级到机械 TTS，彻底杜绝外教原声与机械音混杂双播！
+      return;
     }
 
-    // 如果在此期间用户又按了喇叭，放弃当前任务，严禁 TTS 发声
+    // 如果在此期间用户点击了其他发音，放弃当前例句朗读
     if (this.activePlaybackSeq !== currentSeq) return;
 
-    // 降级使用 TTS 合成音（仅用于长例句理解题、挖空例句或无网场景）
+    // 2. 长例句理解题、语法挖空等文本：启用高质量系统神经网络 TTS 朗读
     if (!('speechSynthesis' in window)) return;
 
     try {
@@ -278,15 +314,25 @@ export class SoundService {
   }
 
   /**
-   * 停止当前发音
+   * 停止当前所有发音，彻底销毁音频对象与系统语音队列
    */
   public static stop(): void {
+    // 递增时序版本号，使所有挂起的异步回调与超时立即失效
+    this.activePlaybackSeq++;
+
     if (this.currentAudio) {
-      this.currentAudio.pause();
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.removeAttribute('src');
+        this.currentAudio.load();
+      } catch (e) {}
       this.currentAudio = null;
     }
+
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
     }
   }
 
