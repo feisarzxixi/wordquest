@@ -12,7 +12,6 @@ import { DifficultyTier, DIFFICULTY_CONFIGS } from '../../config/gamification';
 import { BaseWord, LearningBatch } from '../algorithms/planEngine';
 import { MASTERY_INTERVAL_THRESHOLD } from '../../config/learningRules';
 import { formatDate } from '../algorithms/srsScheduler';
-import seedWordsRaw from '../../data/seedWords.json';
 
 export interface UserSettings {
   id: string;
@@ -131,23 +130,6 @@ export class LocalDB {
       users: parsed.users || {},
       students: parsed.students || {},
     };
-
-    // 默认内置初中核心词 Seed Data
-    if (Object.keys(initial.words).length === 0 && Array.isArray(seedWordsRaw)) {
-      seedWordsRaw.forEach((sw, idx) => {
-        const id = `seed-${idx + 1}-${sw.word.toLowerCase()}`;
-        initial.words[id] = {
-          id,
-          word: sw.word,
-          phonetic: sw.phonetic,
-          meaning: sw.meaning,
-          pos: sw.pos,
-          example: sw.example,
-          translation: sw.translation,
-          createdAt: new Date().toISOString(),
-        };
-      });
-    }
 
     // 默认管理员与默认学生用户保障
     if (!initial.users['admin']) {
