@@ -155,7 +155,7 @@ describe('6. 单词配图精准预解析与零闪烁零上跳 (Image Resolver Te
   });
 
   it('客户端词图字典能够同步检索并判定有无配图', async () => {
-    const { setClientWordImages, getClientWordImage } = await import('../lib/images/clientImageCache');
+    const { setClientWordImages, getClientWordImage, isImagePreloaded, preloadImage, preloadWordImages } = await import('../lib/images/clientImageCache');
     setClientWordImages({
       camping: '/words/camping.png',
       'look after': '/words/look_after.png',
@@ -164,5 +164,10 @@ describe('6. 单词配图精准预解析与零闪烁零上跳 (Image Resolver Te
     expect(getClientWordImage('CAMPING')).toBe('/words/camping.png');
     expect(getClientWordImage('look_after')).toBe('/words/look_after.png');
     expect(getClientWordImage('unknown_word')).toBeNull();
+
+    // 智能预加载 API 测试 (服务端/环境无 window 时安全降级)
+    expect(isImagePreloaded('/words/camping.png')).toBe(false);
+    await preloadImage('/words/camping.png');
+    preloadWordImages([{ word: 'camping' }, 'look after', null]);
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { getClientWordImage } from '../../lib/images/clientImageCache';
+import React, { useState, useEffect, useRef } from 'react';
+import { getClientWordImage, isImagePreloaded, preloadImage } from '../../lib/images/clientImageCache';
 
 interface WordImageBannerProps {
   word: string;
@@ -27,8 +27,24 @@ export const WordImageBanner: React.FC<WordImageBannerProps> = ({
     return null;
   }
 
+  // 3. 智能判定预加载命中：如果该图已被管道提前预加载，首帧直接以 100% 不透明度秒开展示，彻底消除滞后感！
+  const initiallyLoaded = isImagePreloaded(resolvedSrc);
+  const [isLoaded, setIsLoaded] = useState(initiallyLoaded);
   const [hasError, setHasError] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (isImagePreloaded(resolvedSrc)) {
+      setIsLoaded(true);
+    } else {
+      preloadImage(resolvedSrc);
+    }
+
+    // 处理浏览器 HTTP 缓存命中但尚未触发 onLoad 事件的同步就绪状态
+    if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
+      setIsLoaded(true);
+    }
+  }, [resolvedSrc]);
 
   // 加载异常时完全静默隐藏，避免破损图标
   if (hasError) {
@@ -37,18 +53,20 @@ export const WordImageBanner: React.FC<WordImageBannerProps> = ({
 
   return (
     <div
-      className={`w-full relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center select-none shadow-sm transition-opacity duration-300 ${className}`}
+      className={`w-full relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center select-none shadow-sm ${className}`}
       style={{ aspectRatio: '2 / 1', maxHeight: '220px' }}
     >
       <img
+        ref={imgRef}
         src={resolvedSrc}
         alt={word}
         loading="eager"
+        decoding="async"
         onLoad={() => setIsLoaded(true)}
         onError={() => setHasError(true)}
-        className={`w-full h-full object-cover object-center transition-opacity duration-200 ${
+        className={`w-full h-full object-cover object-center ${
           isLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
+        } ${initiallyLoaded ? '' : 'transition-opacity duration-200'}`}
       />
     </div>
   );
