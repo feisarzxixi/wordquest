@@ -4,6 +4,7 @@
  */
 
 import { BaseWord } from '../algorithms/planEngine';
+import * as XLSX from 'xlsx';
 
 export interface RawRow {
   [key: string]: string;
@@ -16,6 +17,7 @@ export interface HeaderMapping {
   posField?: string;
   exampleField?: string;
   translationField?: string;
+  imageField?: string;
 }
 
 export interface ImportPreviewItem {
@@ -26,6 +28,7 @@ export interface ImportPreviewItem {
   pos: string;
   example: string;
   translation: string;
+  image?: string;
   isDuplicate: boolean;
   hasIncompleteContext: boolean;
 }
@@ -76,7 +79,57 @@ export function guessFieldMapping(headers: string[]): HeaderMapping {
   const transIdx = lower.findIndex((h) => ['translation', '例句翻译', '中文例句', '例句释义'].includes(h));
   if (transIdx !== -1) mapping.translationField = headers[transIdx];
 
+  // 7. 单词配图
+  const imgIdx = lower.findIndex((h) => ['image', 'img', 'picture', 'pic', '图片', '配图'].includes(h));
+  if (imgIdx !== -1) mapping.imageField = headers[imgIdx];
+
   return mapping;
+}
+
+/**
+ * 健壮的 Excel (.xlsx / .xls) 二进制 ArrayBuffer 解析器
+ */
+export function parseExcelBuffer(buffer: ArrayBuffer | Uint8Array): { headers: string[]; rows: RawRow[] } {
+  try {
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) return { headers: [], rows: [] };
+
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rawRows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, defval: '' });
+    if (!rawRows || rawRows.length === 0) return { headers: [], rows: [] };
+
+    // 取第一行有效表头
+    const firstRow = rawRows[0] || [];
+    const headers: string[] = [];
+    for (let i = 0; i < firstRow.length; i++) {
+      const h = String(firstRow[i] || '').trim();
+      if (h) headers.push(h);
+      else if (headers.length > 0) headers.push(`Column_${i + 1}`);
+    }
+
+    if (headers.length === 0) return { headers: [], rows: [] };
+
+    const rows: RawRow[] = [];
+    for (let r = 1; r < rawRows.length; r++) {
+      const line = rawRows[r] || [];
+      const rowObj: RawRow = {};
+      let hasContent = false;
+      headers.forEach((h, colIdx) => {
+        const val = line[colIdx] != null ? String(line[colIdx]).trim() : '';
+        rowObj[h] = val;
+        if (val) hasContent = true;
+      });
+      if (hasContent) {
+        rows.push(rowObj);
+      }
+    }
+
+    return { headers, rows };
+  } catch (err) {
+    console.error('Failed to parse excel buffer:', err);
+    return { headers: [], rows: [] };
+  }
 }
 
 /**
@@ -162,6 +215,7 @@ export function buildImportPreview(
     const pos = mapping.posField ? (row[mapping.posField] || '').trim() : '';
     const example = mapping.exampleField ? (row[mapping.exampleField] || '').trim() : '';
     const translation = mapping.translationField ? (row[mapping.translationField] || '').trim() : '';
+    const image = mapping.imageField ? (row[mapping.imageField] || '').trim() : '';
 
     const hasIncomplete = !example || !translation;
 
@@ -183,6 +237,7 @@ export function buildImportPreview(
       pos,
       example,
       translation,
+      image: image || undefined,
       isDuplicate: isDup,
       hasIncompleteContext: hasIncomplete,
     });

@@ -14,6 +14,7 @@ export interface BaseWord {
   pos?: string | null;
   example?: string | null;
   translation?: string | null;
+  image?: string | null;
 }
 
 export type QuizType =
@@ -22,7 +23,8 @@ export type QuizType =
   | 'SENTENCE_FILL'
   | 'SPELLING'
   | 'PHRASE_BLOCKS'     // 短语专属：语块积木拼装
-  | 'PREPOSITION_FILL'; // 短语专属：核心介词挖空
+  | 'PREPOSITION_FILL'  // 短语专属：核心介词挖空
+  | 'MATCHING';          // 连线配对题：左边 4 个英语单词/短语，右边 4 个翻译
 
 export interface PlanTaskItem {
   taskId: string;
@@ -124,7 +126,7 @@ export function assignQuizType(word: BaseWord, indexSeed: number): QuizType {
 
   if (isPhraseWord) {
     // 短语专属题型轮换：绝不走单字母拼写！
-    const phraseTypes: QuizType[] = ['PHRASE_BLOCKS', 'PREPOSITION_FILL', 'MEANING_CHOICE', 'SENTENCE_FILL'];
+    const phraseTypes: QuizType[] = ['PHRASE_BLOCKS', 'PREPOSITION_FILL', 'MATCHING', 'MEANING_CHOICE', 'SENTENCE_FILL'];
     let chosen = phraseTypes[indexSeed % phraseTypes.length];
     if (chosen === 'SENTENCE_FILL' && (!word.example || !word.translation)) {
       chosen = 'PHRASE_BLOCKS';
@@ -132,8 +134,8 @@ export function assignQuizType(word: BaseWord, indexSeed: number): QuizType {
     return chosen;
   }
 
-  // 单个单词常规题型轮换
-  const wordTypes: QuizType[] = ['MEANING_CHOICE', 'AUDIO_CHOICE', 'SENTENCE_FILL', 'SPELLING'];
+  // 单个单词常规题型轮换（涵盖单选、听音、拼写与 4对4 连线配对）
+  const wordTypes: QuizType[] = ['MEANING_CHOICE', 'AUDIO_CHOICE', 'MATCHING', 'SENTENCE_FILL', 'SPELLING'];
   let chosen = wordTypes[indexSeed % wordTypes.length];
   if (chosen === 'SENTENCE_FILL' && (!word.example || !word.translation)) {
     chosen = 'MEANING_CHOICE';

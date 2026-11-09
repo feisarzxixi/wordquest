@@ -9,6 +9,7 @@ import { ChoiceQuizView } from '../../components/study/views/ChoiceQuizView';
 import { AudioQuizView } from '../../components/study/views/AudioQuizView';
 import { SpellingQuizView } from '../../components/study/views/SpellingQuizView';
 import { PhraseBlocksQuizView } from '../../components/study/views/PhraseBlocksQuizView';
+import { MatchingQuizView } from '../../components/study/views/MatchingQuizView';
 import { ResultFeedbackView } from '../../components/study/views/ResultFeedbackView';
 import { DailySummaryView } from '../../components/study/views/DailySummaryView';
 import { FocusEasterEggModal } from '../../components/study/views/FocusEasterEggModal';
@@ -76,32 +77,52 @@ function StudyInner() {
     };
   }, []);
 
-  // 实时累加学习时长 (每 30 秒向服务器心跳一次，仅在页面可见活跃时记录)
+  // 实时累加专注学习时长：增加防发呆/防挂机机制（超过 20 秒无触屏操作自动停止计时）
+  const lastInteractionRef = useRef<number>(Date.now());
+  const activeSecondsAccumulatorRef = useRef<number>(0);
+
   useEffect(() => {
-    const sendHeartbeat = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        fetch('/api/study/time', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ seconds: 30 }),
-        }).catch(() => {});
-      }
+    // 监听用户活跃触碰与按键
+    const markActive = () => {
+      lastInteractionRef.current = Date.now();
     };
 
-    const interval = setInterval(sendHeartbeat, 30000);
-    const initialTimer = setTimeout(() => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    const events = ['touchstart', 'touchend', 'click', 'keydown', 'scroll'];
+    events.forEach((evt) => window.addEventListener(evt, markActive, { passive: true }));
+
+    // 每 1 秒轮询判定当前是否处于“真操作活跃期”
+    const secondTicker = setInterval(() => {
+      const now = Date.now();
+      const isVisible = typeof document !== 'undefined' && document.visibilityState === 'visible';
+      const isUserActive = now - lastInteractionRef.current <= 20000; // 20 秒无操作熔断
+
+      if (isVisible && isUserActive) {
+        activeSecondsAccumulatorRef.current += 1;
+
+        // 累计满 15 秒真实有效操作，向服务端上报一次
+        if (activeSecondsAccumulatorRef.current >= 15) {
+          const reportSec = activeSecondsAccumulatorRef.current;
+          activeSecondsAccumulatorRef.current = 0;
+          fetch('/api/study/time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ seconds: reportSec }),
+          }).catch(() => {});
+        }
+      }
+    }, 1000);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, markActive));
+      clearInterval(secondTicker);
+      // 页面销毁时上报剩余未上报的活跃秒数
+      if (activeSecondsAccumulatorRef.current >= 3) {
         fetch('/api/study/time', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ seconds: 15 }),
+          body: JSON.stringify({ seconds: activeSecondsAccumulatorRef.current }),
         }).catch(() => {});
       }
-    }, 10000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(initialTimer);
     };
   }, []);
 
@@ -457,6 +478,16 @@ function StudyInner() {
 
           {currentQuiz.quizType === 'PHRASE_BLOCKS' && (
             <PhraseBlocksQuizView
+              quiz={currentQuiz}
+              batchIndex={currentBatchIndex}
+              taskIndexInBatch={taskIndex}
+              totalInBatch={currentBatch.testTasks.length}
+              onSubmitAnswer={(isCorrect) => handleSubmitAnswer(isCorrect)}
+            />
+          )}
+
+          {currentQuiz.quizType === 'MATCHING' && (
+            <MatchingQuizView
               quiz={currentQuiz}
               batchIndex={currentBatchIndex}
               taskIndexInBatch={taskIndex}

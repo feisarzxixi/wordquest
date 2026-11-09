@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlankSlot } from '../../lib/algorithms/spellingMasker';
+import { RotateCcw } from 'lucide-react';
 
 export interface LetterInputProps {
   slots: BlankSlot[];
@@ -9,80 +10,117 @@ export interface LetterInputProps {
   disabled?: boolean;
 }
 
+interface LetterChip {
+  id: string;
+  letter: string;
+  isUsed: boolean;
+}
+
 export const LetterInput: React.FC<LetterInputProps> = ({
   slots,
   onSubmit,
   disabled = false,
 }) => {
-  // 维护每个 slot 的当前字符输入
-  const [values, setValues] = useState<string[]>(() => slots.map(() => ''));
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // 维护每个 slot 的当前输入字符
+  const [filledLetters, setFilledLetters] = useState<(string | null)[]>(() => slots.map(() => null));
+  const [chips, setChips] = useState<LetterChip[]>([]);
 
-  // 槽位重置
+  // 当题目 slots 变化时，初始化备选字母池（正确待填字母 + 2~3 个混淆干扰字母打乱）
   useEffect(() => {
-    setValues(slots.map(() => ''));
-    // 自动聚焦到第一个空白输入槽位
-    const firstInputIdx = slots.findIndex((s) => s.isInput);
-    if (firstInputIdx !== -1 && inputRefs.current[firstInputIdx]) {
-      setTimeout(() => inputRefs.current[firstInputIdx]?.focus(), 50);
+    setFilledLetters(slots.map(() => null));
+
+    // 1. 收集所有挖空待填写的真实字母
+    const requiredLetters = slots.filter((s) => s.isInput).map((s) => s.letter.toLowerCase());
+
+    // 2. 补充 2~3 个常见高频干扰字母（确保不只有固定答案）
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    const distractors: string[] = [];
+    const distractorCount = Math.min(3, Math.max(2, 6 - requiredLetters.length));
+
+    while (distractors.length < distractorCount) {
+      const char = alphabet[Math.floor(Math.random() * alphabet.length)];
+      if (!requiredLetters.includes(char) && !distractors.includes(char)) {
+        distractors.push(char);
+      }
     }
+
+    const allLetters = [...requiredLetters, ...distractors];
+    // Fisher-Yates 随机打乱
+    for (let i = allLetters.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allLetters[i], allLetters[j]] = [allLetters[j], allLetters[i]];
+    }
+
+    setChips(
+      allLetters.map((l, idx) => ({
+        id: `chip-${idx}-${l}`,
+        letter: l,
+        isUsed: false,
+      }))
+    );
   }, [slots]);
 
-  const handleChange = (index: number, val: string) => {
-    if (disabled) return;
+  // 点击备选字母块：填入第一个空白槽位
+  const handleSelectChip = (chip: LetterChip) => {
+    if (disabled || chip.isUsed) return;
 
-    // 只取最后一个字符，且必须为英文字母
-    const char = val.slice(-1);
-    if (char && !/[a-zA-Z]/.test(char)) return;
+    // 寻找第一个未填写的 isInput 槽位
+    const firstEmptyIdx = slots.findIndex((s, idx) => s.isInput && filledLetters[idx] === null);
+    if (firstEmptyIdx === -1) return;
 
-    const newValues = [...values];
-    newValues[index] = char.toLowerCase();
-    setValues(newValues);
+    const newFilled = [...filledLetters];
+    newFilled[firstEmptyIdx] = chip.letter;
+    setFilledLetters(newFilled);
 
-    // 自动跳向下一个待输入的槽位
-    if (char) {
-      let nextIdx = -1;
-      for (let i = index + 1; i < slots.length; i++) {
-        if (slots[i].isInput) {
-          nextIdx = i;
-          break;
-        }
-      }
-      if (nextIdx !== -1) {
-        inputRefs.current[nextIdx]?.focus();
-      }
-    }
+    // 标记该 chip 已使用
+    setChips((prev) =>
+      prev.map((c) => (c.id === chip.id ? { ...c, isUsed: true } : c))
+    );
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (disabled) return;
+  // 点击已填入的槽位：撤销该字母，退回备选池
+  const handleRemoveSlot = (slotIdx: number) => {
+    if (disabled || !slots[slotIdx].isInput || filledLetters[slotIdx] === null) return;
 
-    if (e.key === 'Backspace' && !values[index]) {
-      // 当前为空且按退格，回退到上一个可输入的槽位
-      for (let i = index - 1; i >= 0; i--) {
-        if (slots[i].isInput) {
-          inputRefs.current[i]?.focus();
-          break;
+    const removedLetter = filledLetters[slotIdx];
+    const newFilled = [...filledLetters];
+    newFilled[slotIdx] = null;
+    setFilledLetters(newFilled);
+
+    // 释放第一个匹配的 isUsed chip
+    setChips((prev) => {
+      let released = false;
+      return prev.map((c) => {
+        if (!released && c.letter === removedLetter && c.isUsed) {
+          released = true;
+          return { ...c, isUsed: false };
         }
-      }
-    } else if (e.key === 'Enter') {
-      handleSubmit();
-    }
+        return c;
+      });
+    });
   };
 
+  // 一键重置清空当前所有填空
+  const handleResetAll = () => {
+    if (disabled) return;
+    setFilledLetters(slots.map(() => null));
+    setChips((prev) => prev.map((c) => ({ ...c, isUsed: false })));
+  };
+
+  // 组装最终答案并提交
   const handleSubmit = () => {
-    // 组装最终完整单词
     const assembled = slots
-      .map((slot, idx) => (slot.isInput ? values[idx] || '' : slot.letter))
+      .map((s, idx) => (s.isInput ? filledLetters[idx] || '' : s.letter))
       .join('');
     onSubmit(assembled);
   };
 
-  // 检查是否所有必填位都已填入
-  const isFilled = slots.every((s, idx) => !s.isInput || values[idx].length > 0);
+  // 检查所有挖空位置是否均已填好
+  const isAllFilled = slots.every((s, idx) => !s.isInput || filledLetters[idx] !== null);
 
   return (
-    <div className="flex flex-col items-center gap-6 my-4 w-full">
+    <div className="flex flex-col items-center gap-6 my-2 w-full select-none">
+      {/* 1. 顶部单词填空槽位区 */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-full">
         {slots.map((slot, idx) => {
           if (!slot.isInput) {
@@ -90,42 +128,82 @@ export const LetterInput: React.FC<LetterInputProps> = ({
             return (
               <div
                 key={idx}
-                className="w-10 h-12 sm:w-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-bold rounded-xl bg-slate-100 text-slate-700 select-none border border-slate-200"
+                className="w-11 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-2xl font-bold rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 shadow-inner"
               >
                 {slot.letter}
               </div>
             );
           }
 
-          // 待填空位
+          const filledChar = filledLetters[idx];
           return (
-            <input
+            <button
               key={idx}
-              ref={(el) => {
-                inputRefs.current[idx] = el;
-              }}
-              type="text"
-              maxLength={1}
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck="false"
-              value={values[idx] || ''}
+              type="button"
               disabled={disabled}
-              onChange={(e) => handleChange(idx, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(idx, e)}
-              className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold rounded-xl border-2 border-indigo-400 bg-white text-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all shadow-sm"
-            />
+              onClick={() => handleRemoveSlot(idx)}
+              className={`w-11 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-2xl font-black rounded-2xl border-2 transition-all active:scale-95 ${
+                filledChar
+                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-md shadow-indigo-200'
+                  : 'bg-white border-dashed border-indigo-300 text-slate-300 hover:border-indigo-400'
+              }`}
+            >
+              {filledChar || ''}
+            </button>
           );
         })}
       </div>
 
+      <p className="text-xs text-slate-400 font-medium">
+        👆 点击下方备选字母填入空位，点击已填字母可撤回
+      </p>
+
+      {/* 2. 下方备选字母积木池 (专为 iPad 触控优化，超大触控热区) */}
+      <div className="w-full max-w-md bg-slate-50/80 p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
+          {chips.map((chip) => (
+            <button
+              key={chip.id}
+              type="button"
+              disabled={disabled || chip.isUsed}
+              onClick={() => handleSelectChip(chip)}
+              className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black rounded-2xl border-2 transition-all active:scale-90 ${
+                chip.isUsed
+                  ? 'bg-slate-200/50 border-slate-200 text-slate-300 opacity-40 pointer-events-none'
+                  : 'bg-white border-slate-200 text-slate-800 hover:border-indigo-400 hover:bg-indigo-50/50 shadow-sm'
+              }`}
+            >
+              {chip.letter}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 w-full justify-between pt-1 border-t border-slate-200/60">
+          <button
+            type="button"
+            disabled={disabled || filledLetters.every((c) => c === null)}
+            onClick={handleResetAll}
+            className="text-xs font-bold text-slate-500 hover:text-rose-600 disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition-colors px-2 py-1"
+          >
+            <RotateCcw size={13} />
+            <span>清空重填</span>
+          </button>
+
+          <span className="text-[11px] font-mono text-slate-400">
+            {slots.filter((s, i) => s.isInput && filledLetters[i] !== null).length} /{' '}
+            {slots.filter((s) => s.isInput).length} 已填
+          </span>
+        </div>
+      </div>
+
+      {/* 3. 提交确认按钮 */}
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!isFilled || disabled}
-        className="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white font-semibold text-lg shadow-md transition-all"
+        disabled={!isAllFilled || disabled}
+        className="w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-98 disabled:opacity-40 disabled:pointer-events-none text-white font-extrabold text-base shadow-lg shadow-indigo-100 transition-all"
       >
-        提交拼写
+        确认提交 ➔
       </button>
     </div>
   );

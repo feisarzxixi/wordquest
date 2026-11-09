@@ -21,6 +21,16 @@ const DEFAULT_GUEST: UserSession = {
 };
 
 export class ClientSession {
+  public static hasLoggedInUser(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_CURRENT);
+      return !!stored;
+    } catch (e) {
+      return false;
+    }
+  }
+
   public static getCurrentUser(): UserSession {
     if (typeof window === 'undefined') return DEFAULT_GUEST;
 

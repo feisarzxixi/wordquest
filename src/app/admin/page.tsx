@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { parseCSV, guessFieldMapping, buildImportPreview, ImportAnalysisResult } from '../../lib/importer/FileDecoder';
+import { parseCSV, parseExcelBuffer, guessFieldMapping, buildImportPreview, ImportAnalysisResult } from '../../lib/importer/FileDecoder';
 import { ClientSession } from '../../lib/auth/clientSession';
 import {
   Shield,
@@ -50,6 +50,7 @@ export default function AdminPage() {
 
   // 词库导入状态
   const [importAnalysis, setImportAnalysis] = useState<ImportAnalysisResult | null>(null);
+  const [importMode, setImportMode] = useState<'replace' | 'append'>('replace');
   const [isImporting, setIsImporting] = useState(false);
   const [importSuccessMsg, setImportSuccessMsg] = useState('');
 
@@ -115,18 +116,31 @@ export default function AdminPage() {
     }
   };
 
-  // CSV 文件解析
+  // Excel / CSV 文件解析
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setImportSuccessMsg('');
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
     const reader = new FileReader();
 
     reader.onload = async (evt) => {
       try {
-        const text = evt.target?.result as string;
-        const { headers, rows } = parseCSV(text);
+        let headers: string[] = [];
+        let rows: any[] = [];
+
+        if (isExcel) {
+          const buffer = evt.target?.result as ArrayBuffer;
+          const parsed = parseExcelBuffer(buffer);
+          headers = parsed.headers;
+          rows = parsed.rows;
+        } else {
+          const text = evt.target?.result as string;
+          const parsed = parseCSV(text);
+          headers = parsed.headers;
+          rows = parsed.rows;
+        }
 
         if (rows.length === 0) {
           alert('文件为空或无法解析有效行！');
@@ -142,11 +156,15 @@ export default function AdminPage() {
         const analysis = buildImportPreview(rows, mapping, existingWordSet);
         setImportAnalysis(analysis);
       } catch (err) {
-        alert('文件解析失败，请检查 CSV 格式');
+        alert('文件解析失败，请检查文件格式');
       }
     };
 
-    reader.readAsText(file, 'utf-8');
+    if (isExcel) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file, 'utf-8');
+    }
   };
 
   // 确认导入词库入库
@@ -155,29 +173,41 @@ export default function AdminPage() {
     setIsImporting(true);
 
     try {
-      const payloadWords = importAnalysis.previewRows
-        .filter((r) => !r.isDuplicate)
-        .map((r) => ({
-          word: r.word,
-          phonetic: r.phonetic,
-          meaning: r.meaning,
-          pos: r.pos,
-          example: r.example,
-          translation: r.translation,
-        }));
+      const rowsToImport =
+        importMode === 'replace'
+          ? importAnalysis.previewRows
+          : importAnalysis.previewRows.filter((r) => !r.isDuplicate);
+
+      const payloadWords = rowsToImport.map((r) => ({
+        word: r.word,
+        phonetic: r.phonetic,
+        meaning: r.meaning,
+        pos: r.pos,
+        example: r.example,
+        translation: r.translation,
+        image: r.image || undefined,
+      }));
 
       const res = await fetch('/api/words', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-role': 'admin' },
-        body: JSON.stringify({ words: payloadWords }),
+        body: JSON.stringify({ words: payloadWords, mode: importMode }),
       }).then((r) => r.json());
 
       if (res.success) {
-        setImportSuccessMsg(
-          `成功导入 ${res.data.added} 个新词！(自动跳过 ${res.data.skipped} 个已有重复词)`
-        );
+        if (importMode === 'replace') {
+          setImportSuccessMsg(
+            `词库已完全覆盖重排！当前词库共 ${res.data.total} 个词汇，已重置学习排期，全员将严格按 Excel 表格顺序从前到后开始学习！`
+          );
+        } else {
+          setImportSuccessMsg(
+            `成功增量导入 ${res.data.added} 个新词！(自动跳过 ${res.data.skipped} 个已有重复词)`
+          );
+        }
         setImportAnalysis(null);
         fetchAdminData();
+      } else {
+        alert(res.error || '导入入库失败');
       }
     } catch (err) {
       alert('导入入库失败');
@@ -688,10 +718,10 @@ export default function AdminPage() {
           <div className="relative inline-block">
             <label className="relative px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 cursor-pointer flex items-center justify-center gap-2 transition-all shadow-md shadow-indigo-200">
               <Upload size={18} />
-              <span>选择 CSV 文件导入题库</span>
+              <span>选择 Excel (.xlsx / .xls) 或 CSV 文件导入题库</span>
               <input
                 type="file"
-                accept=".csv,text/csv,text/plain,.txt,application/vnd.ms-excel"
+                accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                 onChange={handleFileUpload}
                 className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
               />
@@ -701,34 +731,90 @@ export default function AdminPage() {
           {/* 导入预览与字段确认 */}
           {importAnalysis && (
             <div className="mt-4 p-5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h3 className="font-bold text-slate-800 text-sm">
-                  导入预览：待导入 {importAnalysis.validCount} 词 (重复跳过 {importAnalysis.duplicateCount} 词)
+                  解析完成：文件内共 {importAnalysis.previewRows.length} 行数据
                 </h3>
+
+                {/* 导入模式切换器 */}
+                <div className="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setImportMode('replace')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      importMode === 'replace'
+                        ? 'bg-rose-600 text-white shadow-sm font-extrabold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ⚡ 完全替换并重新排序 (覆盖旧词库)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImportMode('append')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      importMode === 'append'
+                        ? 'bg-white text-indigo-600 shadow-sm font-extrabold'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ➕ 增量追加 (保留旧词)
+                  </button>
+                </div>
+              </div>
+
+              {/* 模式说明条 */}
+              <div
+                className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                  importMode === 'replace'
+                    ? 'bg-rose-50 border border-rose-200 text-rose-800'
+                    : 'bg-indigo-50 border border-indigo-200 text-indigo-800'
+                }`}
+              >
+                <AlertCircle size={15} className="shrink-0" />
+                {importMode === 'replace' ? (
+                  <span>
+                    <strong>【完全替换模式】</strong> 将清空原有词库顺序，完全按照您本次 Excel 文件<strong>自上而下的行号顺序</strong>重新建立学习计划！保留已有旧词的学习掌握度。
+                  </span>
+                ) : (
+                  <span>
+                    <strong>【增量追加模式】</strong> 仅添加新词（待入库 {importAnalysis.validCount} 词），自动跳过已有重复词（跳过 {importAnalysis.duplicateCount} 词）。
+                  </span>
+                )}
               </div>
 
               <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl bg-white">
                 <table className="w-full text-left text-xs text-slate-700">
                   <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 font-bold">
                     <tr>
+                      <th className="p-2.5">序号</th>
                       <th className="p-2.5">单词/短语</th>
                       <th className="p-2.5">词性</th>
                       <th className="p-2.5">中文释义</th>
                       <th className="p-2.5">例句</th>
+                      <th className="p-2.5">配图</th>
                       <th className="p-2.5">状态</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {importAnalysis.previewRows.slice(0, 50).map((row, idx) => (
-                      <tr key={idx} className={row.isDuplicate ? 'bg-slate-50/60 text-slate-400' : ''}>
-                        <td className="p-2.5 font-bold font-mono">{row.word}</td>
+                    {importAnalysis.previewRows.slice(0, 100).map((row, idx) => (
+                      <tr key={idx} className={importMode === 'append' && row.isDuplicate ? 'bg-slate-50/60 text-slate-400' : ''}>
+                        <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="p-2.5 font-bold font-mono text-slate-900">{row.word}</td>
                         <td className="p-2.5">{row.pos || '-'}</td>
                         <td className="p-2.5">{row.meaning}</td>
                         <td className="p-2.5 truncate max-w-xs">{row.example || '-'}</td>
+                        <td className="p-2.5 text-slate-500 font-mono text-[11px] truncate max-w-[100px]">
+                          {row.image || `${row.word}.jpg`}
+                        </td>
                         <td className="p-2.5">
-                          {row.isDuplicate ? (
+                          {importMode === 'replace' ? (
+                            <span className="text-[10px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded font-bold">
+                              第 {idx + 1} 顺位
+                            </span>
+                          ) : row.isDuplicate ? (
                             <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">
-                              重复已存在
+                              重复跳过
                             </span>
                           ) : (
                             <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">
@@ -750,8 +836,16 @@ export default function AdminPage() {
                 >
                   取消
                 </button>
-                <Button onClick={handleConfirmImport} disabled={isImporting}>
-                  {isImporting ? '正在入库...' : `确认导入 ${importAnalysis.validCount} 个新词`}
+                <Button
+                  onClick={handleConfirmImport}
+                  disabled={isImporting}
+                  className={importMode === 'replace' ? 'bg-rose-600 hover:bg-rose-700 text-white' : ''}
+                >
+                  {isImporting
+                    ? '正在入库...'
+                    : importMode === 'replace'
+                    ? `确认按表格顺序完全替换词库 (${importAnalysis.previewRows.length} 词)`
+                    : `确认增量导入 ${importAnalysis.validCount} 个新词`}
                 </Button>
               </div>
             </div>

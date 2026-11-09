@@ -50,6 +50,12 @@ export default function StatisticsPage() {
   const total7DaysMinutes = recent7Days.reduce((acc: number, cur: any) => acc + (cur.minutes || 0), 0);
   const avgDailyMinutes = Math.round((total7DaysMinutes / 7) * 10) / 10;
 
+  // 近 7 天每日学习单词数数据
+  const recent7DaysWords = stats?.recent7DaysWordCounts || [];
+  const maxWords = Math.max(...recent7DaysWords.map((d: any) => d.count), 20);
+  const total7DaysWords = recent7DaysWords.reduce((acc: number, cur: any) => acc + (cur.count || 0), 0);
+  const avgDailyWords = Math.round(total7DaysWords / 7);
+
   return (
     <div className="flex-1 max-w-5xl w-full mx-auto p-6 sm:p-10 flex flex-col gap-8">
       <div>
@@ -127,7 +133,61 @@ export default function StatisticsPage() {
         </Card>
       </div>
 
-      {/* 近 7 天每日学习时间柱状统计图 */}
+      {/* 图表一：近 7 天每日学习单词量柱状统计图 */}
+      <Card className="p-6 sm:p-8 border-slate-100 flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <BookOpen size={20} className="text-emerald-600" />
+            <h2 className="text-lg font-bold text-slate-900">近 7 天每日学习词汇量 (个)</h2>
+          </div>
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
+            <span>
+              近7天累计: <strong className="text-emerald-600 font-bold">{total7DaysWords}</strong> 词
+            </span>
+            <span>
+              日均: <strong className="text-indigo-600 font-bold">{avgDailyWords}</strong> 词
+            </span>
+          </div>
+        </div>
+
+        {/* 柱状图 */}
+        <div className="flex items-end justify-between gap-3 h-52 pt-6 px-2 sm:px-6">
+          {recent7DaysWords.map((item: any, idx: number) => {
+            const heightPercent = Math.max(8, Math.round((item.count / maxWords) * 100));
+            const isToday = idx === recent7DaysWords.length - 1;
+
+            return (
+              <div key={item.date} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                <span className="text-xs font-bold text-slate-700 transition-transform group-hover:scale-110">
+                  {item.count > 0 ? `${item.count}词` : '0'}
+                </span>
+
+                <div className="w-full max-w-[44px] bg-slate-100 rounded-2xl overflow-hidden flex flex-col justify-end h-32 p-1">
+                  <div
+                    className={`w-full rounded-xl transition-all duration-500 shadow-sm ${
+                      isToday
+                        ? 'bg-gradient-to-t from-emerald-600 via-emerald-500 to-teal-400'
+                        : item.count > 0
+                        ? 'bg-gradient-to-t from-emerald-400 to-teal-300 group-hover:from-emerald-500 group-hover:to-teal-400'
+                        : 'bg-slate-200'
+                    }`}
+                    style={{ height: `${heightPercent}%` }}
+                  />
+                </div>
+
+                <div className="flex flex-col items-center mt-1">
+                  <span className={`text-xs font-bold ${isToday ? 'text-emerald-600' : 'text-slate-600'}`}>
+                    {item.weekday}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">{item.label}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* 图表二：近 7 天每日学习时间柱状统计图 */}
       <Card className="p-6 sm:p-8 border-slate-100 flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2">
@@ -145,7 +205,7 @@ export default function StatisticsPage() {
         </div>
 
         {/* 柱状图 */}
-        <div className="flex items-end justify-between gap-3 h-56 pt-8 px-2 sm:px-6">
+        <div className="flex items-end justify-between gap-3 h-52 pt-6 px-2 sm:px-6">
           {recent7Days.map((item: any, idx: number) => {
             const heightPercent = Math.max(8, Math.round((item.minutes / maxMinutes) * 100));
             const isToday = idx === recent7Days.length - 1;
@@ -156,7 +216,7 @@ export default function StatisticsPage() {
                   {item.minutes > 0 ? `${item.minutes}m` : '0'}
                 </span>
 
-                <div className="w-full max-w-[44px] bg-slate-100 rounded-2xl overflow-hidden flex flex-col justify-end h-36 p-1">
+                <div className="w-full max-w-[44px] bg-slate-100 rounded-2xl overflow-hidden flex flex-col justify-end h-32 p-1">
                   <div
                     className={`w-full rounded-xl transition-all duration-500 shadow-sm ${
                       isToday

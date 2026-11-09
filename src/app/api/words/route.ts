@@ -57,13 +57,18 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { words } = body;
+    const { words, mode } = body;
     if (!Array.isArray(words)) {
       return NextResponse.json({ success: false, error: 'words must be an array' }, { status: 400 });
     }
 
+    if (mode === 'replace') {
+      const result = LocalDB.replaceWords(words);
+      return NextResponse.json({ success: true, mode: 'replace', data: result });
+    }
+
     const result = LocalDB.addWords(words);
-    return NextResponse.json({ success: true, data: result });
+    return NextResponse.json({ success: true, mode: 'append', data: result });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 400 });
   }

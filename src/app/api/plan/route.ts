@@ -167,6 +167,9 @@ export async function POST(req: Request) {
         studentId
       );
 
+      // 记录当日学习单词活跃数
+      LocalDB.recordDailyLearnedWord(wordId, planDate, studentId);
+
       return NextResponse.json({
         success: true,
         data: { pointsAwarded, isFirstTry, srs },

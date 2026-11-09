@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { COPYWRITING } from '../config/copywriting';
+import { ClientSession } from '../lib/auth/clientSession';
 import { Flame, Award, BookOpen, Calendar, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
@@ -17,6 +18,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 未登录过的设备首次访问自动拦截跳转到登录页
+    if (typeof window !== 'undefined' && !ClientSession.hasLoggedInUser()) {
+      window.location.href = '/login';
+      return;
+    }
     fetchData();
   }, []);
 

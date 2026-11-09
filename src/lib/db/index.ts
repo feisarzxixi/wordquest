@@ -72,6 +72,7 @@ export interface StudentData {
   records: Record<string, LearningRecord>;
   dailyPlans: Record<string, DailyPlanEntity>;
   dailyStudyTime?: Record<string, number>; // key: YYYY-MM-DD, value: 累计学习分钟数
+  dailyLearnedWords?: Record<string, number>; // key: YYYY-MM-DD, value: 当日学习/复习单词数
 }
 
 export interface DatabaseSchema {
@@ -405,6 +406,59 @@ export class LocalDB {
     return { added, skipped };
   }
 
+  public static replaceWords(words: Omit<WordRecord, 'id' | 'createdAt'>[]): { total: number } {
+    const db = this.get();
+
+    // 建立旧单词小写 -> 旧单词ID的映射，以便智能继承学生既有记忆等级
+    const oldWordTextToOldId: Record<string, string> = {};
+    for (const [id, w] of Object.entries(db.words)) {
+      oldWordTextToOldId[w.word.trim().toLowerCase()] = id;
+    }
+
+    // 清空现有全局词库，完全按照本次上传的 Excel 行号自上而下重新建立词库索引与先后顺序
+    db.words = {};
+    const newWordTextToNewId: Record<string, string> = {};
+
+    let index = 0;
+    for (const w of words) {
+      const trimmedWord = w.word.trim();
+      const lower = trimmedWord.toLowerCase();
+      if (!lower || newWordTextToNewId[lower]) continue;
+
+      const id = `word-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`;
+      index++;
+      db.words[id] = {
+        ...w,
+        id,
+        word: trimmedWord,
+        meaning: w.meaning.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      newWordTextToNewId[lower] = id;
+    }
+
+    // 智能更新所有学生的学习进度：保留依然在新词库里的单词记录，淘汰已删除的旧词记录
+    for (const student of Object.values(db.students)) {
+      const updatedRecords: Record<string, LearningRecord> = {};
+      for (const [oldWordText, oldId] of Object.entries(oldWordTextToOldId)) {
+        const oldRecord = student.records[oldId];
+        const newId = newWordTextToNewId[oldWordText];
+        if (oldRecord && newId) {
+          updatedRecords[newId] = {
+            ...oldRecord,
+            wordId: newId,
+          };
+        }
+      }
+      student.records = updatedRecords;
+      // 清空旧计划，保证系统立即基于全新词库顺序生成学习计划
+      student.dailyPlans = {};
+    }
+
+    this.persist();
+    return { total: Object.keys(db.words).length };
+  }
+
   // --- Learning Records (Per-Student) ---
   public static getAllRecords(studentId: string = 'student-default'): LearningRecord[] {
     const student = this.ensureStudent(studentId);
@@ -514,6 +568,63 @@ export class LocalDB {
     return result;
   }
 
+  // --- Daily Learned Words Tracking ---
+  public static recordDailyLearnedWord(
+    wordId: string,
+    date?: string,
+    studentId: string = 'student-default'
+  ): void {
+    const student = this.ensureStudent(studentId);
+    if (!student.dailyLearnedWords) {
+      student.dailyLearnedWords = {};
+    }
+    const today = date || new Date().toISOString().split('T')[0];
+    student.dailyLearnedWords[today] = (student.dailyLearnedWords[today] || 0) + 1;
+    this.persist();
+  }
+
+  public static getRecentLearnedWordCounts(
+    studentId: string = 'student-default',
+    days: number = 7
+  ): Array<{
+    date: string;
+    label: string;
+    weekday: string;
+    count: number;
+  }> {
+    const student = this.ensureStudent(studentId);
+    const map = student.dailyLearnedWords || {};
+    const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const result = [];
+    const now = new Date();
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 86400000);
+      const dateStr = d.toISOString().split('T')[0];
+      const isToday = i === 0;
+      const label = `${d.getMonth() + 1}/${d.getDate()}`;
+      const weekday = isToday ? '今天' : weekDayNames[d.getDay()];
+
+      // 优先从 dailyLearnedWords 获取；如没有，也可按当天学习记录 updatedAt 智能聚合保底
+      let count = map[dateStr] || 0;
+      if (count === 0 && student.records) {
+        const recordsOnDay = Object.values(student.records).filter(
+          (r) => r.updatedAt && r.updatedAt.startsWith(dateStr)
+        ).length;
+        count = recordsOnDay;
+      }
+
+      result.push({
+        date: dateStr,
+        label,
+        weekday,
+        count,
+      });
+    }
+
+    return result;
+  }
+
   // --- Statistics (Per-Student) ---
   public static getStatistics(studentId: string = 'student-default') {
     const student = this.ensureStudent(studentId);
@@ -535,6 +646,7 @@ export class LocalDB {
 
     const accuracyRate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
     const recent7DaysTime = this.getRecentStudyTimes(studentId, 7);
+    const recent7DaysWordCounts = this.getRecentLearnedWordCounts(studentId, 7);
     const todayStr = new Date().toISOString().split('T')[0];
     const todayStudyMinutes = (student.dailyStudyTime && student.dailyStudyTime[todayStr]) || 0;
     const totalStudyMinutes = student.dailyStudyTime
@@ -554,6 +666,7 @@ export class LocalDB {
       todayStudyMinutes,
       totalStudyMinutes: Math.round(totalStudyMinutes * 10) / 10,
       recent7DaysTime,
+      recent7DaysWordCounts,
     };
   }
 

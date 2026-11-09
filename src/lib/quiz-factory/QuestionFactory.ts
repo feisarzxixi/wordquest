@@ -17,6 +17,18 @@ export interface PhraseBlocksData {
   shuffledChips: string[];
 }
 
+export interface MatchingPair {
+  id: string;
+  word: string;
+  meaning: string;
+}
+
+export interface MatchingQuizData {
+  pairs: MatchingPair[];
+  shuffledWords: { id: string; text: string }[];
+  shuffledMeanings: { id: string; text: string }[];
+}
+
 export interface QuizPayload {
   taskId: string;
   wordId: string;
@@ -27,6 +39,7 @@ export interface QuizPayload {
   options?: ChoiceOption[];// 选择类题目的 4 个选项
   spellingData?: MaskedSpellingResult; // 拼写题专用数据
   phraseBlocksData?: PhraseBlocksData; // 短语积木专用数据
+  matchingData?: MatchingQuizData;     // 连线配对题专用数据
 }
 
 const COMMON_PREPOSITIONS = [
@@ -267,6 +280,57 @@ export class QuestionFactory {
   }
 
   /**
+   * 7. 连线配对题：左边 4 个英语单词/短语，右边 4 个中文翻译
+   */
+  static createMatchingQuiz(
+    word: BaseWord,
+    pool: BaseWord[],
+    taskId: string
+  ): QuizPayload {
+    // 包含当前词，总共抽取 4 个词
+    const otherWords = pool.filter((w) => w.id !== word.id);
+    const shuffledOthers = shuffle(otherWords);
+    const selectedWords: BaseWord[] = [word, ...shuffledOthers.slice(0, 3)];
+
+    // 如果总词数不够 4 个，用常见高频词安全补足
+    const fallbacks: BaseWord[] = [
+      { id: 'fb-1', word: 'abandon', meaning: '放弃；抛弃' },
+      { id: 'fb-2', word: 'astronaut', meaning: '宇航员' },
+      { id: 'fb-3', word: 'adventure', meaning: '冒险；奇遇' },
+      { id: 'fb-4', word: 'take care of', meaning: '照顾；照料' },
+    ];
+    for (const fb of fallbacks) {
+      if (selectedWords.length >= 4) break;
+      if (!selectedWords.find((w) => w.word.toLowerCase() === fb.word.toLowerCase())) {
+        selectedWords.push(fb);
+      }
+    }
+
+    const pairs: MatchingPair[] = selectedWords.slice(0, 4).map((w) => ({
+      id: w.id,
+      word: w.word,
+      meaning: w.meaning,
+    }));
+
+    const shuffledWords = shuffle(pairs.map((p) => ({ id: p.id, text: p.word })));
+    const shuffledMeanings = shuffle(pairs.map((p) => ({ id: p.id, text: p.meaning })));
+
+    return {
+      taskId,
+      wordId: word.id,
+      word,
+      quizType: 'MATCHING',
+      prompt: '连线配对题',
+      subPrompt: '点击左边的英文单词/短语，再点击右边对应的中文翻译进行连线配对',
+      matchingData: {
+        pairs,
+        shuffledWords,
+        shuffledMeanings,
+      },
+    };
+  }
+
+  /**
    * 综合调度入口（自动进行短语分流与降级防护）
    */
   static createQuiz(
@@ -283,6 +347,8 @@ export class QuestionFactory {
     }
 
     switch (type) {
+      case 'MATCHING':
+        return this.createMatchingQuiz(word, pool, taskId);
       case 'PHRASE_BLOCKS':
         return this.createPhraseBlocks(word, taskId);
       case 'PREPOSITION_FILL':
