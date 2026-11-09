@@ -38,6 +38,7 @@ function StudyInner() {
   const [studyState, setStudyState] = useState<StudyState>('LOADING');
   const [currentBatch, setCurrentBatch] = useState<LearningBatch | null>(null);
   const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+  const [recognitionWords, setRecognitionWords] = useState<BaseWord[]>([]);
   const [recognitionIndex, setRecognitionIndex] = useState(0);
   const [taskIndex, setTaskIndex] = useState(0);
   const [plan, setPlan] = useState<any>(null);
@@ -61,6 +62,14 @@ function StudyInner() {
 
   const startTimeRef = useRef<number>(Date.now());
   const wakeLockRef = useRef<any>(null);
+
+  // 本地镜像备份助手：保障弱网、断网或容器重启时 0 进度丢失
+  const syncLocalBackup = (user: any, planData: any) => {
+    if (!user || !planData || !planData.date) return;
+    try {
+      localStorage.setItem(`wq_backup_plan_${user.id}_${planData.date}`, JSON.stringify(planData));
+    } catch (e) {}
+  };
 
   // iPad 屏幕防熄屏保活 (Screen Wake Lock)
   useEffect(() => {
@@ -89,6 +98,7 @@ function StudyInner() {
     if (sec <= 0) return;
     try {
       const currentUser = ClientSession.getCurrentUser();
+      if (!currentUser) return;
       fetch('/api/study/time', {
         method: 'POST',
         headers: {
@@ -101,7 +111,6 @@ function StudyInner() {
   };
 
   useEffect(() => {
-    // 监听用户活跃触碰与按键
     const markActive = () => {
       lastInteractionRef.current = Date.now();
     };
@@ -109,20 +118,17 @@ function StudyInner() {
     const events = ['touchstart', 'touchend', 'click', 'keydown', 'scroll'];
     events.forEach((evt) => window.addEventListener(evt, markActive, { passive: true }));
 
-    // 每 1 秒轮询判定当前是否处于“真操作活跃期”
     const secondTicker = setInterval(() => {
       const now = Date.now();
       const isVisible = typeof document !== 'undefined' && document.visibilityState === 'visible';
-      const isUserActive = now - lastInteractionRef.current <= 20000; // 20 秒无操作防发呆熔断
+      const isUserActive = now - lastInteractionRef.current <= 20000;
 
       if (isVisible && isUserActive) {
         activeSecondsAccumulatorRef.current += 1;
         sessionActiveSecondsRef.current += 1;
 
-        // 统一专注力彩蛋判定：真实有效专注达到 15 分钟（900 秒）
         if (sessionActiveSecondsRef.current >= 900 && !hasTriggeredEasterEggRef.current) {
           hasTriggeredEasterEggRef.current = true;
-          // 立即将累加秒数同步上报到服务端，保证立刻去统计页查看时 100% 同步计入
           const reportSec = activeSecondsAccumulatorRef.current;
           activeSecondsAccumulatorRef.current = 0;
           if (reportSec > 0) {
@@ -131,7 +137,6 @@ function StudyInner() {
           setShowEasterEgg(true);
         }
 
-        // 累计满 15 秒真实有效操作，向服务端上报一次
         if (activeSecondsAccumulatorRef.current >= 15) {
           const reportSec = activeSecondsAccumulatorRef.current;
           activeSecondsAccumulatorRef.current = 0;
@@ -141,11 +146,11 @@ function StudyInner() {
     }, 1000);
 
     return () => {
-      events.forEach((evt) => window.removeEventListener(evt, markActive));
       clearInterval(secondTicker);
-      // 页面销毁或切出时上报剩余未上报的活跃秒数
-      if (activeSecondsAccumulatorRef.current >= 2) {
-        reportActiveSeconds(activeSecondsAccumulatorRef.current);
+      events.forEach((evt) => window.removeEventListener(evt, markActive));
+      const remainingSec = activeSecondsAccumulatorRef.current;
+      if (remainingSec > 0) {
+        reportActiveSeconds(remainingSec);
       }
     };
   }, []);
@@ -155,45 +160,107 @@ function StudyInner() {
     fetchSession();
   }, [isPracticeMode]);
 
-  // 管道预加载 4：识记阶段提前预加载后 2~3 个识记单词的图片与发音，点击“我认识”下一张秒出秒读
+  // 管道预加载 4：识记阶段提前预加载后 2~3 个新词配图与音频
   useEffect(() => {
-    if (studyState === 'BATCH_RECOGNITION' && currentBatch?.words) {
-      const upcoming = currentBatch.words.slice(recognitionIndex, recognitionIndex + 3);
+    if (studyState === 'BATCH_RECOGNITION' && recognitionWords.length > 0) {
+      const upcoming = recognitionWords.slice(recognitionIndex, recognitionIndex + 3);
       preloadWordImages(upcoming);
       SoundService.preloadWordAudio(upcoming);
     }
-  }, [studyState, recognitionIndex, currentBatch]);
+  }, [studyState, recognitionIndex, recognitionWords]);
+
+  /**
+   * 启动某一批次的学习流：严格执行“旧词无剧透”原则
+   */
+  const startBatchFlow = (batch: LearningBatch, initialTaskIdx: number = 0) => {
+    setCurrentBatch(batch);
+
+    // 筛选本组中真正属于首次学习的全新单词
+    const newWords = batch.words.filter((w) =>
+      batch.newWordIds && batch.newWordIds.length > 0 ? batch.newWordIds.includes(w.id) : false
+    );
+
+    if (newWords.length > 0 && initialTaskIdx === 0 && !batch.testTasks[0]?.isAnswered) {
+      // 含有新词：仅对新词开展认识卡学习
+      setRecognitionWords(newWords);
+      setRecognitionIndex(0);
+      setStudyState('BATCH_RECOGNITION');
+      preloadWordImages(newWords);
+      SoundService.preloadWordAudio(newWords);
+    } else {
+      // 纯复习词组：严禁剧透中文释义，直接进入测试题目考查记忆！
+      setRecognitionWords([]);
+      setTaskIndex(initialTaskIdx);
+      prepareQuiz(batch, initialTaskIdx);
+      setStudyState('BATCH_TESTING');
+    }
+  };
 
   const fetchSession = async () => {
     try {
       initClientImageCache();
+      const currentUser = ClientSession.getCurrentUser();
+
       if (isPracticeMode) {
-        // 进入无尽加练流
         fetchNextPracticeBatch(0);
         return;
       }
 
       // 常规今日计划加载
-      const res = await fetch('/api/plan').then((r) => r.json());
+      const authHeaders = ClientSession.getAuthHeaders();
+      const res = await fetch('/api/plan', {
+        headers: authHeaders,
+      }).then((r) => r.json());
+
       if (!res.success || !res.data || res.data.totalWordCount === 0) {
         setStudyState('EMPTY');
         return;
       }
 
-      const planData = res.data;
+      let planData = res.data;
+
+      // 离线/刷新保护：检查本地备份，如果本地存在且进度比服务端新（如容器重启），自动恢复
+      if (currentUser && planData) {
+        try {
+          const rawLocal = localStorage.getItem(`wq_backup_plan_${currentUser.id}_${planData.date}`);
+          if (rawLocal) {
+            const localPlan = JSON.parse(rawLocal);
+            const localAnswered = localPlan.batches?.reduce(
+              (acc: number, b: any) => acc + (b.testTasks?.filter((t: any) => t.isAnswered).length || 0),
+              0
+            ) || 0;
+            const serverAnswered = planData.batches?.reduce(
+              (acc: number, b: any) => acc + (b.testTasks?.filter((t: any) => t.isAnswered).length || 0),
+              0
+            ) || 0;
+
+            if (localAnswered > serverAnswered) {
+              planData = localPlan;
+              fetch('/api/plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders },
+                body: JSON.stringify({
+                  action: 'restore_plan',
+                  plan: localPlan,
+                  studentId: currentUser.id,
+                }),
+              }).catch(() => {});
+            }
+          }
+        } catch (e) {}
+      }
+
+      syncLocalBackup(currentUser, planData);
       setPlan(planData);
 
       if (planData.isCompleted) {
-        // 今日任务已经完成，直接转入无尽加练流！
         fetchNextPracticeBatch(0);
         return;
       }
 
-      // 恢复现场
       const savedBatchIdx = planData.currentBatchIndex || 0;
       const savedTaskIdx = planData.currentTaskIndex || 0;
       setCurrentBatchIndex(savedBatchIdx);
-      setTaskIndex(savedTaskIdx);
 
       const batch = planData.batches[savedBatchIdx];
       if (!batch) {
@@ -202,9 +269,7 @@ function StudyInner() {
         return;
       }
 
-      setCurrentBatch(batch);
-
-      // 管道预加载 1：首屏立即并行预加载当前组和下一组的全部单词图片与外教发音
+      // 管道预加载当前组和下一组单词
       if (batch?.words) {
         preloadWordImages(batch.words);
         SoundService.preloadWordAudio(batch.words);
@@ -214,45 +279,26 @@ function StudyInner() {
         SoundService.preloadWordAudio(planData.batches[savedBatchIdx + 1].words);
       }
 
-      // 管道预加载 2：空闲阶段静默预加载今日剩余所有批次的单词配图与音频
-      setTimeout(() => {
-        for (let b = savedBatchIdx + 2; b < planData.batches.length; b++) {
-          if (planData.batches[b]?.words) {
-            preloadWordImages(planData.batches[b].words);
-            SoundService.preloadWordAudio(planData.batches[b].words);
-          }
-        }
-      }, 1000);
-
-      if (savedTaskIdx === 0 && !batch.testTasks[0]?.isAnswered) {
-        setStudyState('BATCH_RECOGNITION');
-        setRecognitionIndex(0);
-      } else {
-        prepareQuiz(batch, savedTaskIdx);
-        setStudyState('BATCH_TESTING');
-      }
+      startBatchFlow(batch, savedTaskIdx);
     } catch (err) {
       console.error('Fetch session error:', err);
       setStudyState('EMPTY');
     }
   };
 
-  // 获取下一个无尽加练批次 (根据 N 动态配比)
+  // 获取下一个无尽加练批次 (每批 8 词)
   const fetchNextPracticeBatch = async (batchIdx: number) => {
     try {
       setStudyState('LOADING');
-      const res = await fetch(`/api/plan?mode=practice&batchIndex=${batchIdx}`).then((r) => r.json());
+      const authHeaders = ClientSession.getAuthHeaders();
+      const res = await fetch(`/api/plan?mode=practice&batchIndex=${batchIdx}`, {
+        headers: authHeaders,
+      }).then((r) => r.json());
+
       if (res.success && res.data?.batch) {
         const batch: LearningBatch = res.data.batch;
-        setCurrentBatch(batch);
         setCurrentBatchIndex(batchIdx);
-        setRecognitionIndex(0);
-        setTaskIndex(0);
-        setStudyState('BATCH_RECOGNITION');
-        if (batch.words) {
-          preloadWordImages(batch.words);
-          SoundService.preloadWordAudio(batch.words);
-        }
+        startBatchFlow(batch, 0);
       } else {
         setStudyState('EMPTY');
       }
@@ -266,7 +312,6 @@ function StudyInner() {
     const task: PlanTaskItem = batch.testTasks[tIdx];
     if (!task) return;
 
-    // 管道预加载 3：在孩子思考读题期间，提前在后台加载本题反馈页配图/音频与下一题配图/音频，实现答对瞬间 0 延迟秒开
     if (task.word) {
       preloadWordImages([task.word]);
       SoundService.preloadWordAudio([task.word]);
@@ -282,24 +327,31 @@ function StudyInner() {
     setCurrentQuiz(quizPayload);
   };
 
-  // 1. 认识卡选择 (我不认识 / 我认识)
+  // 1. 认识卡选择 (我不认识 / 我认识) - 仅在新词出现时进行
   const handleCardChoice = async (familiarity: number) => {
-    if (!currentBatch) return;
-    const currentWord = currentBatch.words[recognitionIndex];
+    if (!currentBatch || recognitionWords.length === 0) return;
+    const currentWord = recognitionWords[recognitionIndex];
+    const currentUser = ClientSession.getCurrentUser();
 
     fetch('/api/plan', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...ClientSession.getAuthHeaders(),
+      },
       body: JSON.stringify({
         action: 'card_familiarity',
         wordId: currentWord.id,
         familiarity,
+        studentId: currentUser?.id,
       }),
     });
 
-    if (recognitionIndex < currentBatch.words.length - 1) {
+    if (recognitionIndex < recognitionWords.length - 1) {
       setRecognitionIndex((prev) => prev + 1);
     } else {
+      // 本批次新词全部认识完毕，直接进入测试
+      setRecognitionWords([]);
       prepareQuiz(currentBatch, 0);
       setTaskIndex(0);
       setStudyState('BATCH_TESTING');
@@ -310,16 +362,21 @@ function StudyInner() {
   const handleSubmitAnswer = async (isCorrect: boolean) => {
     if (!currentBatch) return;
     const task = currentBatch.testTasks[taskIndex];
+    const currentUser = ClientSession.getCurrentUser();
 
     try {
       const res = await fetch('/api/plan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...ClientSession.getAuthHeaders(),
+        },
         body: JSON.stringify({
           action: 'submit_task',
           taskId: task.taskId,
           wordId: task.wordId,
           isCorrect,
+          studentId: currentUser?.id,
         }),
       }).then((r) => r.json());
 
@@ -327,7 +384,12 @@ function StudyInner() {
       task.isAnswered = true;
       task.isFirstTryCorrect = isCorrect;
 
-      // 检查加练是否满 15 分钟真实专注（双重保障）
+      // 更新本地镜像
+      if (plan) {
+        syncLocalBackup(currentUser, plan);
+      }
+
+      // 15 分钟专注成就彩蛋判定
       if (sessionActiveSecondsRef.current >= 900 && !hasTriggeredEasterEggRef.current) {
         hasTriggeredEasterEggRef.current = true;
         const reportSec = activeSecondsAccumulatorRef.current;
@@ -336,6 +398,37 @@ function StudyInner() {
           reportActiveSeconds(reportSec);
         }
         setShowEasterEgg(true);
+      }
+
+      // 如果当前是连线题：连线题已在连线题界面原地呈现了完整正确答案和同色标记，
+      // 不需要再跳入单张生词结果反馈卡，直接原地推进组内下一题或进入批次结算！
+      if (currentQuiz?.quizType === 'MATCHING') {
+        const isLastInBatch = taskIndex >= currentBatch.testTasks.length - 1;
+        if (isLastInBatch) {
+          handleNextFromFeedback();
+        } else {
+          const nextTaskIdx = taskIndex + 1;
+          setTaskIndex(nextTaskIdx);
+          prepareQuiz(currentBatch, nextTaskIdx);
+          setStudyState('BATCH_TESTING');
+
+          if (!isPracticeMode && plan) {
+            fetch('/api/plan', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...ClientSession.getAuthHeaders(),
+              },
+              body: JSON.stringify({
+                action: 'update_progress',
+                batchIndex: currentBatchIndex,
+                taskIndex: nextTaskIdx,
+                studentId: currentUser?.id,
+              }),
+            });
+          }
+        }
+        return;
       }
 
       const isLastInBatch = taskIndex === currentBatch.testTasks.length - 1;
@@ -348,7 +441,7 @@ function StudyInner() {
         isLastTask: isRegularLast,
       });
 
-      // 方案 A 独立结果页（2.0 秒自动推进或快进）
+      // 独立结果反馈页
       setStudyState('RESULT_FEEDBACK');
     } catch (err) {
       console.error('Submit answer error:', err);
@@ -359,6 +452,7 @@ function StudyInner() {
   const handleNextFromFeedback = async () => {
     if (!currentBatch) return;
     const isLastTaskInBatch = taskIndex >= currentBatch.testTasks.length - 1;
+    const currentUser = ClientSession.getCurrentUser();
 
     if (!isLastTaskInBatch) {
       // 推进组内下一题
@@ -370,37 +464,40 @@ function StudyInner() {
       if (!isPracticeMode && plan) {
         fetch('/api/plan', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...ClientSession.getAuthHeaders(),
+          },
           body: JSON.stringify({
             action: 'update_progress',
             batchIndex: currentBatchIndex,
             taskIndex: nextTaskIdx,
+            studentId: currentUser?.id,
           }),
         });
       }
     } else {
-      // 本批次结束
+      // 本批次全部 8 题结束
       if (isPracticeMode || (plan && plan.isCompleted)) {
-        // 无尽加练流：不回首页，自动开启下一轮！
         fetchNextPracticeBatch(currentBatchIndex + 1);
       } else {
-        // 常规模式
         if (currentBatchIndex < plan.batches.length - 1) {
           const nextBatchIdx = currentBatchIndex + 1;
           const nextBatch = plan.batches[nextBatchIdx];
-          setCurrentBatch(nextBatch);
           setCurrentBatchIndex(nextBatchIdx);
-          setRecognitionIndex(0);
-          setTaskIndex(0);
-          setStudyState('BATCH_RECOGNITION');
+          startBatchFlow(nextBatch, 0);
 
           fetch('/api/plan', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...ClientSession.getAuthHeaders(),
+            },
             body: JSON.stringify({
               action: 'update_progress',
               batchIndex: nextBatchIdx,
               taskIndex: 0,
+              studentId: currentUser?.id,
             }),
           });
         } else {
@@ -412,10 +509,17 @@ function StudyInner() {
 
   const completeDailyPlan = async () => {
     try {
+      const currentUser = ClientSession.getCurrentUser();
       const res = await fetch('/api/plan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'complete_plan' }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...ClientSession.getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          action: 'complete_plan',
+          studentId: currentUser?.id,
+        }),
       }).then((r) => r.json());
 
       const bonusAwarded = res.data?.bonusAwarded || 0;
@@ -451,42 +555,10 @@ function StudyInner() {
     });
   };
 
-  // --- 状态渲染 ---
-
-  if (studyState === 'LOADING') {
-    return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="flex flex-col items-center gap-3 text-slate-400">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-          <span className="text-sm font-medium">正在调取词汇与搭配...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (studyState === 'EMPTY') {
-    return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full p-8 text-center flex flex-col items-center">
-          <h2 className="text-xl font-bold text-slate-800 mb-2">词库尚无单词或短语</h2>
-          <p className="text-sm text-slate-500 mb-6">
-            请先在【设置】中上传导入你的专属单词/短语表。
-          </p>
-          <Link
-            href="/settings"
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-base hover:bg-indigo-700 transition-all shadow-md"
-          >
-            前往导入词库
-          </Link>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 w-full flex flex-col items-center justify-center p-4 sm:p-8">
-      {/* 顶部轻量导航 */}
-      <div className="w-full max-w-2xl flex items-center justify-between mb-4">
+    <div className="w-full flex-1 flex flex-col items-center justify-center p-3 sm:p-6 md:p-8 max-w-4xl mx-auto">
+      {/* 顶部简易返回条 */}
+      <div className="w-full flex items-center justify-between mb-4 sm:mb-6">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors"
@@ -495,29 +567,32 @@ function StudyInner() {
           <span>{isPracticeMode || (plan && plan.isCompleted) ? COPYWRITING.study.btnExitPractice : '返回首页'}</span>
         </Link>
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-          {isPracticeMode || (plan && plan.isCompleted) ? '无尽加练进行中' : `第 ${currentBatchIndex + 1} 批次`}
+          {isPracticeMode || (plan && plan.isCompleted) ? '无尽加练进行中' : `第 ${currentBatchIndex + 1} 批次 (8词/组)`}
         </span>
       </div>
 
-      {/* 阶段 1：组内连续认识卡 */}
-      {studyState === 'BATCH_RECOGNITION' && currentBatch && (
+      {/* 阶段 1：组内连续认识卡（仅针对本组全新单词，旧复习词绝不剧透） */}
+      {studyState === 'BATCH_RECOGNITION' && currentBatch && recognitionWords.length > 0 && (
         <WordCardView
-          key={`recog-${currentBatchIndex}-${recognitionIndex}-${currentBatch.words[recognitionIndex].word}`}
-          word={currentBatch.words[recognitionIndex]}
+          key={`recog-${currentBatchIndex}-${recognitionIndex}-${recognitionWords[recognitionIndex]?.word}`}
+          word={recognitionWords[recognitionIndex]}
           batchIndex={currentBatchIndex}
           wordIndexInBatch={recognitionIndex}
-          totalInBatch={currentBatch.words.length}
+          totalInBatch={recognitionWords.length}
           onUnknown={() => handleCardChoice(0)}
           onKnown={() => handleCardChoice(1)}
         />
       )}
 
-      {/* 阶段 2：组内混排测试题 */}
+      {/* 阶段 2：组内混排测试题 (8 题丰富多样化随机分发) */}
       {studyState === 'BATCH_TESTING' && currentQuiz && currentBatch && (
         <>
           {(currentQuiz.quizType === 'MEANING_CHOICE' ||
             currentQuiz.quizType === 'SENTENCE_FILL' ||
-            currentQuiz.quizType === 'PREPOSITION_FILL') && (
+            currentQuiz.quizType === 'PREPOSITION_FILL' ||
+            currentQuiz.quizType === 'PART_OF_SPEECH' ||
+            currentQuiz.quizType === 'FORM_TRANSFORMATION' ||
+            currentQuiz.quizType === 'GRAMMAR_USAGE') && (
             <ChoiceQuizView
               quiz={currentQuiz}
               batchIndex={currentBatchIndex}
@@ -573,7 +648,7 @@ function StudyInner() {
         </>
       )}
 
-      {/* 阶段 3：方案 A 独立结果页 (2.0 秒停留) */}
+      {/* 阶段 3：常规题独立答题结果反馈页 */}
       {studyState === 'RESULT_FEEDBACK' && lastResult && (
         <ResultFeedbackView
           isCorrect={lastResult.isCorrect}
@@ -584,7 +659,7 @@ function StudyInner() {
         />
       )}
 
-      {/* 阶段 4：今日完成结算看板 */}
+      {/* 阶段 4：今日学习结算卡 */}
       {studyState === 'DAILY_SUMMARY' && summaryData && (
         <DailySummaryView
           bonusPoints={summaryData.bonusPoints}
@@ -598,13 +673,36 @@ function StudyInner() {
         />
       )}
 
-      {/* 15 分钟专注成就彩蛋弹窗 */}
+      {/* 加载中与空状态 */}
+      {studyState === 'LOADING' && (
+        <div className="flex flex-col items-center justify-center p-12">
+          <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-slate-500 font-bold text-sm">正在智能装载组块考题...</p>
+        </div>
+      )}
+
+      {studyState === 'EMPTY' && (
+        <Card className="w-full max-w-md p-8 text-center flex flex-col items-center">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl mb-4">
+            <Sparkles size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">暂无可学计划</h2>
+          <p className="text-slate-500 text-sm mb-6">今日任务可能已全部完成或词库为空。</p>
+          <Link
+            href="/"
+            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-md hover:bg-indigo-700 transition-colors"
+          >
+            返回首页
+          </Link>
+        </Card>
+      )}
+
+      {/* 15 分钟专注学习成就彩蛋弹窗 */}
       {showEasterEgg && (
         <FocusEasterEggModal
           onContinue={() => {
             setShowEasterEgg(false);
-            sessionActiveSecondsRef.current = 0; // 开启下一轮 15 分钟专注周期
-            hasTriggeredEasterEggRef.current = false;
+            sessionActiveSecondsRef.current = 0;
           }}
         />
       )}
@@ -616,8 +714,8 @@ export default function StudyPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+          <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >

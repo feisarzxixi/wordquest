@@ -151,14 +151,18 @@ export const ProfileSwitcherModal: React.FC<ProfileSwitcherModalProps> = ({
           ) : (
             <span className="text-[11px] text-slate-400">WordQuest 账号管理</span>
           )}
-          <Link
-            href="/login"
-            onClick={onClose}
-            className="flex items-center gap-1 text-slate-400 hover:text-slate-700 font-medium"
+          <button
+            type="button"
+            onClick={() => {
+              ClientSession.logout();
+              onClose();
+              window.location.href = '/login';
+            }}
+            className="flex items-center gap-1 text-rose-500 hover:text-rose-700 font-bold transition-colors cursor-pointer"
           >
             <LogOut size={13} />
             <span>退出当前账号</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>

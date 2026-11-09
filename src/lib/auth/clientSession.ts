@@ -13,41 +13,36 @@ export interface UserSession {
 const STORAGE_KEY_CURRENT = 'wq_current_user';
 const STORAGE_KEY_PROFILES = 'wq_saved_profiles';
 
-const DEFAULT_GUEST: UserSession = {
-  id: 'student-default',
-  username: 'student',
-  realName: '张同学',
-  role: 'student',
-};
-
 export class ClientSession {
   public static hasLoggedInUser(): boolean {
     if (typeof window === 'undefined') return false;
     try {
       const stored = localStorage.getItem(STORAGE_KEY_CURRENT);
-      return !!stored;
+      if (!stored) return false;
+      const user = JSON.parse(stored);
+      return !!(user && user.id && user.username);
     } catch (e) {
       return false;
     }
   }
 
-  public static getCurrentUser(): UserSession {
-    if (typeof window === 'undefined') return DEFAULT_GUEST;
+  public static getCurrentUser(): UserSession | null {
+    if (typeof window === 'undefined') return null;
 
     try {
       const stored = localStorage.getItem(STORAGE_KEY_CURRENT);
       if (stored) {
         const user = JSON.parse(stored);
-        this.syncCookie(user.id);
-        return user;
+        if (user && user.id) {
+          this.syncCookie(user.id);
+          return user;
+        }
       }
     } catch (e) {
       console.warn('Load user from localStorage failed:', e);
     }
 
-    this.setCurrentUser(DEFAULT_GUEST);
-    this.addSavedProfile(DEFAULT_GUEST);
-    return DEFAULT_GUEST;
+    return null;
   }
 
   public static setCurrentUser(user: UserSession): void {
@@ -62,13 +57,26 @@ export class ClientSession {
     }
   }
 
+  public static logout(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(STORAGE_KEY_CURRENT);
+      if (typeof document !== 'undefined') {
+        document.cookie = 'studentId=; path=/; max-age=0; SameSite=Lax';
+      }
+      window.dispatchEvent(new CustomEvent('wq_user_changed', { detail: null }));
+    } catch (e) {
+      console.warn('Logout failed:', e);
+    }
+  }
+
   private static syncCookie(userId: string): void {
     if (typeof document === 'undefined') return;
     document.cookie = `studentId=${encodeURIComponent(userId)}; path=/; max-age=31536000; SameSite=Lax`;
   }
 
   public static getSavedProfiles(): UserSession[] {
-    if (typeof window === 'undefined') return [DEFAULT_GUEST];
+    if (typeof window === 'undefined') return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY_PROFILES);
       if (raw) {
@@ -81,7 +89,7 @@ export class ClientSession {
       console.warn('Load profiles failed:', e);
     }
 
-    return [DEFAULT_GUEST];
+    return [];
   }
 
   public static addSavedProfile(user: UserSession): void {
@@ -100,11 +108,12 @@ export class ClientSession {
     try {
       const list = this.getSavedProfiles().filter((p) => p.id !== userId);
       localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(list));
-      if (this.getCurrentUser().id === userId) {
+      const cur = this.getCurrentUser();
+      if (cur && cur.id === userId) {
         if (list.length > 0) {
           this.setCurrentUser(list[0]);
         } else {
-          this.setCurrentUser(DEFAULT_GUEST);
+          this.logout();
         }
       }
     } catch (e) {
@@ -124,6 +133,7 @@ export class ClientSession {
 
   public static getAuthHeaders(): Record<string, string> {
     const user = this.getCurrentUser();
+    if (!user) return {};
     return {
       'x-student-id': user.id,
       'x-user-role': user.role,

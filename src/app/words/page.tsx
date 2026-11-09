@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { SpeakerBtn } from '../../components/ui/SpeakerBtn';
 import { COPYWRITING } from '../../config/copywriting';
+import { ClientSession } from '../../lib/auth/clientSession';
 import { Search, BookOpen } from 'lucide-react';
 
 export default function WordsPage() {
@@ -22,7 +23,9 @@ export default function WordsPage() {
       if (filter !== 'all') params.set('filter', filter);
       if (searchQuery) params.set('q', searchQuery);
 
-      const res = await fetch(`/api/words?${params.toString()}`).then((r) => r.json());
+      const res = await fetch(`/api/words?${params.toString()}`, {
+        headers: ClientSession.getAuthHeaders(),
+      }).then((r) => r.json());
       if (res.success) {
         setWords(res.data);
       }

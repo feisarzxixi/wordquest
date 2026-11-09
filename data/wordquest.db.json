@@ -39117,6 +39117,16 @@
       "status": "approved",
       "createdAt": "2026-11-08T15:09:36.424Z",
       "approvedAt": "2026-11-08T15:09:36.424Z"
+    },
+    "student-faruide": {
+      "id": "student-faruide",
+      "username": "faruide",
+      "realName": "Faruide",
+      "password": "123456",
+      "role": "student",
+      "status": "approved",
+      "createdAt": "2026-11-09T12:00:00.000Z",
+      "approvedAt": "2026-11-09T12:00:00.000Z"
     }
   },
   "students": {
@@ -39152,6 +39162,23 @@
       },
       "records": {},
       "dailyPlans": {}
+    },
+    "student-faruide": {
+      "settings": {
+        "id": "student-faruide",
+        "studentName": "Faruide",
+        "difficulty": "master",
+        "volume": 1,
+        "speechRate": 0.85,
+        "accent": "uk",
+        "streakDays": 0,
+        "totalPoints": 0,
+        "lastCompletedDate": null
+      },
+      "records": {},
+      "dailyPlans": {},
+      "dailyStudyTime": {},
+      "dailyLearnedWords": {}
     }
   }
 }

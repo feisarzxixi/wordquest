@@ -171,3 +171,72 @@ describe('6. 单词配图精准预解析与零闪烁零上跳 (Image Resolver Te
     preloadWordImages([{ word: 'camping' }, 'look after', null]);
   });
 });
+
+describe('7. 词元合并、语法过滤与 8 词闭环考点测试 (Lemmatization & 8-Word Batches)', () => {
+  it('纯元语法词汇被正确识别并过滤 (verb, verbs, nouns, infinitive 等)', async () => {
+    const { isMetagrammarTerm, processLemmatization } = await import('../lib/algorithms/lemmatizer');
+    expect(isMetagrammarTerm('verb')).toBe(true);
+    expect(isMetagrammarTerm('verbs')).toBe(true);
+    expect(isMetagrammarTerm('adjectives')).toBe(true);
+    expect(isMetagrammarTerm('challenge')).toBe(false);
+
+    const rawWords: BaseWord[] = [
+      { id: 'w1', word: 'verb', meaning: '动词' },
+      { id: 'w2', word: 'verbs', meaning: '动词' },
+      { id: 'w3', word: 'school', meaning: '学校' },
+      { id: 'w4', word: 'schools', meaning: '学校' },
+      { id: 'w5', word: 'enjoy', meaning: '享受' },
+      { id: 'w6', word: 'enjoyed', meaning: '享受（过去式）' },
+    ];
+
+    const result = processLemmatization(rawWords);
+    // 元语法词 verb, verbs 被过滤
+    expect(result.primaryWords.some(w => w.word === 'verb')).toBe(false);
+    expect(result.primaryWords.some(w => w.word === 'verbs')).toBe(false);
+    // 规则变形被合并为原形属性
+    expect(result.primaryWords.some(w => w.word === 'school')).toBe(true);
+    expect(result.primaryWords.some(w => w.word === 'schools')).toBe(false);
+    const schoolWord = result.primaryWords.find(w => w.word === 'school');
+    expect(schoolWord?.forms?.plural).toBe('schools');
+  });
+
+  it('每组切分为 8 个单词的认知批次 (TARGET = 8)', () => {
+    const dummyWords: BaseWord[] = Array.from({ length: 16 }, (_, i) => ({
+      id: `w-${i}`,
+      word: `word${i}`,
+      meaning: `含义${i}`,
+    }));
+
+    const batches = splitIntoBatches(dummyWords);
+    expect(batches.length).toBe(2);
+    expect(batches[0].length).toBe(8);
+    expect(batches[1].length).toBe(8);
+  });
+
+  it('新题型正确生成：词性辨析 (PART_OF_SPEECH) 与时态转换 (FORM_TRANSFORMATION)', () => {
+    const verbWord: BaseWord = {
+      id: 'v1',
+      word: 'improve',
+      meaning: '改善；提高',
+      pos: 'v.',
+    };
+    const pool: BaseWord[] = [
+      verbWord,
+      { id: 'n1', word: 'challenge', meaning: '挑战', pos: 'n.' },
+      { id: 'a1', word: 'rich', meaning: '富有的', pos: 'adj.' },
+      { id: 'adv1', word: 'quietly', meaning: '安静地', pos: 'adv.' },
+    ];
+
+    // 词性辨析题
+    const posQuiz = QuestionFactory.createPartOfSpeech(verbWord, pool, 'pos-task-1');
+    expect(posQuiz.quizType).toBe('PART_OF_SPEECH');
+    expect(posQuiz.prompt).toContain('动词');
+    expect(posQuiz.options?.find(o => o.isCorrect)?.text).toContain('improve');
+
+    // 词形时态题
+    const formQuiz = QuestionFactory.createFormTransformation(verbWord, pool, 'form-task-1');
+    expect(formQuiz.quizType).toBe('FORM_TRANSFORMATION');
+    expect(formQuiz.prompt).toContain('过去式');
+    expect(formQuiz.options?.find(o => o.isCorrect)?.text).toBe('improved');
+  });
+});

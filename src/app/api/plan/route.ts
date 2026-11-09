@@ -139,6 +139,11 @@ export async function POST(req: Request) {
     const plan = LocalDB.getDailyPlan(planDate, studentId);
     const settings = LocalDB.getSettings(studentId);
 
+    if (action === 'restore_plan' && body.plan) {
+      LocalDB.saveDailyPlan(body.plan, studentId);
+      return NextResponse.json({ success: true, data: body.plan });
+    }
+
     if (action === 'update_progress' && plan) {
       plan.currentBatchIndex = batchIndex ?? plan.currentBatchIndex;
       plan.currentTaskIndex = taskIndex ?? plan.currentTaskIndex;

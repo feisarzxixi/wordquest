@@ -37,7 +37,9 @@ export default function SettingsPage() {
   useEffect(() => {
     const user = ClientSession.getCurrentUser();
     setCurrentUser(user);
-    fetchSettings(user.id);
+    if (user) {
+      fetchSettings(user.id);
+    }
   }, []);
 
   const fetchSettings = async (studentId: string) => {
@@ -63,6 +65,7 @@ export default function SettingsPage() {
     setSaveSuccess(false);
     try {
       const user = ClientSession.getCurrentUser();
+      if (!user) return;
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: {

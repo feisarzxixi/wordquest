@@ -28,10 +28,11 @@ export default function HomePage() {
 
   const fetchData = async () => {
     try {
+      const authHeaders = ClientSession.getAuthHeaders();
       const [settingsRes, planRes, statsRes] = await Promise.all([
-        fetch('/api/settings').then((r) => r.json()),
-        fetch('/api/plan').then((r) => r.json()),
-        fetch('/api/stats').then((r) => r.json()),
+        fetch('/api/settings', { headers: authHeaders }).then((r) => r.json()),
+        fetch('/api/plan', { headers: authHeaders }).then((r) => r.json()),
+        fetch('/api/stats', { headers: authHeaders }).then((r) => r.json()),
       ]);
 
       setData({

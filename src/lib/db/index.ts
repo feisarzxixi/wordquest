@@ -158,12 +158,38 @@ export class LocalDB {
       };
     }
 
-    // 平滑迁移：确保 student-default 拥有独立沙盒
+    if (!initial.users['student-faruide']) {
+      initial.users['student-faruide'] = {
+        id: 'student-faruide',
+        username: 'faruide',
+        realName: 'Faruide',
+        password: '123456',
+        role: 'student',
+        status: 'approved',
+        createdAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+      };
+    }
+
+    // 平滑迁移：确保内置学生拥有独立沙盒
     if (!initial.students['student-default']) {
       initial.students['student-default'] = {
         settings: { ...initial.settings },
         records: { ...initial.records },
         dailyPlans: { ...initial.dailyPlans },
+      };
+    }
+
+    if (!initial.students['student-faruide']) {
+      initial.students['student-faruide'] = {
+        settings: {
+          ...DEFAULT_SETTINGS,
+          id: 'student-faruide',
+          studentName: 'Faruide',
+          difficulty: 'master',
+        },
+        records: {},
+        dailyPlans: {},
       };
     }
 

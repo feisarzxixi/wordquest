@@ -1,6 +1,7 @@
 /**
  * 题型生成工厂 (Question Factory)
  * 纯逻辑解耦：支持单词常规题型与短语专属题型（语块拼装、介词挖空）
+ * 新增 Workbook 针对性考题：词性辨析 (PART_OF_SPEECH)、词形时态变换 (FORM_TRANSFORMATION)、语法功能理解 (GRAMMAR_USAGE)
  */
 
 import { BaseWord, QuizType, isPhrase } from '../algorithms/planEngine';
@@ -240,7 +241,6 @@ export class QuestionFactory {
     taskId: string
   ): QuizPayload {
     const tokens = word.word.trim().split(/\s+/);
-    // 寻找短语中的核心介词/小品词
     let targetPrepIndex = -1;
     for (let i = tokens.length - 1; i >= 0; i--) {
       if (COMMON_PREPOSITIONS.includes(tokens[i].toLowerCase())) {
@@ -250,7 +250,6 @@ export class QuestionFactory {
     }
 
     if (targetPrepIndex === -1) {
-      // 若无常见介词，降级为语块拼装
       return this.createPhraseBlocks(word, taskId);
     }
 
@@ -259,7 +258,6 @@ export class QuestionFactory {
     maskedTokens[targetPrepIndex] = '______';
     const maskedPrompt = maskedTokens.join(' ');
 
-    // 抽取 3 个干扰介词
     const otherPreps = COMMON_PREPOSITIONS.filter((p) => p !== correctPrep);
     const distractors = shuffle(otherPreps).slice(0, 3);
 
@@ -287,17 +285,15 @@ export class QuestionFactory {
     pool: BaseWord[],
     taskId: string
   ): QuizPayload {
-    // 包含当前词，总共抽取 4 个词
     const otherWords = pool.filter((w) => w.id !== word.id);
     const shuffledOthers = shuffle(otherWords);
     const selectedWords: BaseWord[] = [word, ...shuffledOthers.slice(0, 3)];
 
-    // 如果总词数不够 4 个，用常见高频词安全补足
     const fallbacks: BaseWord[] = [
-      { id: 'fb-1', word: 'abandon', meaning: '放弃；抛弃' },
-      { id: 'fb-2', word: 'astronaut', meaning: '宇航员' },
-      { id: 'fb-3', word: 'adventure', meaning: '冒险；奇遇' },
-      { id: 'fb-4', word: 'take care of', meaning: '照顾；照料' },
+      { id: 'fb-1', word: 'challenge', meaning: '挑战' },
+      { id: 'fb-2', word: 'past', meaning: '过去的；一般过去时' },
+      { id: 'fb-3', word: 'present', meaning: '现在的；礼物' },
+      { id: 'fb-4', word: 'enjoy', meaning: '享受；喜欢' },
     ];
     for (const fb of fallbacks) {
       if (selectedWords.length >= 4) break;
@@ -331,7 +327,220 @@ export class QuestionFactory {
   }
 
   /**
-   * 综合调度入口（自动进行短语分流与降级防护）
+   * 8. 词性辨析题 (Part of Speech) - 真实 Workbook 核心题型
+   */
+  static createPartOfSpeech(
+    word: BaseWord,
+    pool: BaseWord[],
+    taskId: string
+  ): QuizPayload {
+    let targetPosName = '名词 (Noun)';
+    let posKey = 'n';
+
+    if (word.pos?.includes('v')) {
+      targetPosName = '动词 (Verb)';
+      posKey = 'v';
+    } else if (word.pos?.includes('adj')) {
+      targetPosName = '形容词 (Adjective)';
+      posKey = 'adj';
+    } else if (word.pos?.includes('adv')) {
+      targetPosName = '副词 (Adverb)';
+      posKey = 'adv';
+    }
+
+    // 从词池中筛选不同词性的干扰项
+    const otherWords = pool.filter(
+      (w) => w.id !== word.id && w.pos && !w.pos.includes(posKey)
+    );
+    const shuffledDistractors = shuffle(otherWords).slice(0, 3);
+
+    const fallbackDistractors = [
+      { text: 'quickly (快地)', isCorrect: false },
+      { text: 'beautiful (美丽的)', isCorrect: false },
+      { text: 'decision (决定)', isCorrect: false },
+      { text: 'explore (探索)', isCorrect: false },
+    ];
+
+    const distractors: ChoiceOption[] = shuffledDistractors.map((w, idx) => ({
+      id: `pos-distractor-${idx}`,
+      text: `${w.word} (${w.meaning.split(/；|;/)[0]})`,
+      isCorrect: false,
+    }));
+
+    while (distractors.length < 3) {
+      const fb = fallbackDistractors.find((f) => !distractors.some((d) => d.text.startsWith(f.text.split(' ')[0])));
+      if (fb) {
+        distractors.push({ id: `pos-fb-${distractors.length}`, text: fb.text, isCorrect: false });
+      } else {
+        break;
+      }
+    }
+
+    const options: ChoiceOption[] = shuffle([
+      { id: 'correct', text: `${word.word} (${word.meaning.split(/；|;/)[0]})`, isCorrect: true },
+      ...distractors,
+    ]);
+
+    return {
+      taskId,
+      wordId: word.id,
+      word,
+      quizType: 'PART_OF_SPEECH',
+      prompt: `下列选项中，哪一个是【${targetPosName}】？`,
+      subPrompt: `考查考点：词性识别与句子语法成分对应`,
+      options,
+    };
+  }
+
+  /**
+   * 9. 词形与时态转换题 (Form / Tense Transformation) - 真实 Workbook 语法题
+   */
+  static createFormTransformation(
+    word: BaseWord,
+    pool: BaseWord[],
+    taskId: string
+  ): QuizPayload {
+    const isVerb = word.pos?.includes('v');
+    const baseText = word.word.trim();
+
+    if (isVerb || word.forms?.past) {
+      // 考查动词过去式
+      const correctPast = word.forms?.past || (
+        baseText.endsWith('e') ? `${baseText}d` :
+        baseText.endsWith('y') && !/[aeiou]y$/i.test(baseText) ? `${baseText.slice(0, -1)}ied` :
+        `${baseText}ed`
+      );
+
+      const d1 = baseText.endsWith('e') ? `${baseText}ed` : `${baseText}d`;
+      const d2 = `${baseText}ing`;
+      const d3 = `${baseText}s`;
+
+      const options: ChoiceOption[] = shuffle([
+        { id: 'correct', text: correctPast, isCorrect: true },
+        { id: 'd1', text: d1, isCorrect: false },
+        { id: 'd2', text: d2, isCorrect: false },
+        { id: 'd3', text: d3, isCorrect: false },
+      ].filter((v, idx, arr) => arr.findIndex(t => t.text === v.text) === idx));
+
+      return {
+        taskId,
+        wordId: word.id,
+        word,
+        quizType: 'FORM_TRANSFORMATION',
+        prompt: `请选出动词 【${baseText}】 的正确一般过去式 (Past Simple) 形式：`,
+        subPrompt: `动词含义：${word.meaning}`,
+        options,
+      };
+    } else {
+      // 考查名词规则复数
+      const correctPlural = word.forms?.plural || (
+        baseText.endsWith('y') && !/[aeiou]y$/i.test(baseText) ? `${baseText.slice(0, -1)}ies` :
+        baseText.endsWith('s') || baseText.endsWith('ch') || baseText.endsWith('sh') || baseText.endsWith('x') ? `${baseText}es` :
+        `${baseText}s`
+      );
+
+      const d1 = `${baseText}es`;
+      const d2 = `${baseText}'s`;
+      const d3 = `${baseText}ies`;
+
+      const options: ChoiceOption[] = shuffle([
+        { id: 'correct', text: correctPlural, isCorrect: true },
+        { id: 'd1', text: d1, isCorrect: false },
+        { id: 'd2', text: d2, isCorrect: false },
+        { id: 'd3', text: d3, isCorrect: false },
+      ].filter((v, idx, arr) => arr.findIndex(t => t.text === v.text) === idx));
+
+      return {
+        taskId,
+        wordId: word.id,
+        word,
+        quizType: 'FORM_TRANSFORMATION',
+        prompt: `请选出名词 【${baseText}】 的正确规则复数 (Plural) 形式：`,
+        subPrompt: `名词含义：${word.meaning}`,
+        options,
+      };
+    }
+  }
+
+  /**
+   * 10. Workbook 经典语法理解题 (Grammar Usage)
+   */
+  static createGrammarUsage(
+    word: BaseWord,
+    taskId: string
+  ): QuizPayload {
+    const text = word.word.toLowerCase();
+
+    const grammarQuestions = [
+      {
+        keyword: 'past',
+        prompt: '在英语中，【一般过去时 (Past Simple)】最核心的用法是：',
+        subPrompt: '语法考点：过去时态的表达范围与时间状语搭配',
+        correct: '表示在过去特定时间发生并已结束的动作或状态',
+        distractors: [
+          '表示说话时刻正在进行的动作',
+          '表示对将来发生的事情做出的打算或预测',
+          '表示从过去一直持续到现在的动作并对现在造成影响',
+        ],
+      },
+      {
+        keyword: 'present',
+        prompt: '【一般现在时 (Present Simple)】常用于下列哪种语境？',
+        subPrompt: '语法考点：现在时态的基本表达功能',
+        correct: '表示经常性、习惯性的动作、客观事实或客观真理',
+        distractors: [
+          '表示过去已经完成且与现在无关的事情',
+          '表示正在发生的瞬时动作',
+          '表示过去某时刻正在发生的事情',
+        ],
+      },
+      {
+        keyword: 'passive',
+        prompt: '在英语句子中，【被动语态 (Passive Voice)】的基本动词构成是：',
+        subPrompt: '语法考点：被动语态核心结构',
+        correct: 'be 动词 + 过去分词 (done)',
+        distractors: [
+          'have / has + 动词原形',
+          'will + 过去分词 (done)',
+          'be 动词 + 动词-ing (现在分词)',
+        ],
+      },
+      {
+        keyword: 'default',
+        prompt: `在句子 "Yesterday, they ______ (${word.word}) the project successfully." 中，空格处动词应使用什么时态？`,
+        subPrompt: `根据时间状语 Yesterday 判断时态`,
+        correct: '一般过去时 (Past Simple)',
+        distractors: [
+          '一般现在时 (Present Simple)',
+          '现在进行时 (Present Continuous)',
+          '一般将来时 (Future Simple)',
+        ],
+      },
+    ];
+
+    let match = grammarQuestions.find((q) => text.includes(q.keyword));
+    if (!match) {
+      match = grammarQuestions[grammarQuestions.length - 1];
+    }
+
+    const options: ChoiceOption[] = shuffle([
+      { id: 'correct', text: match.correct, isCorrect: true },
+      ...match.distractors.map((text, idx) => ({ id: `gram-${idx}`, text, isCorrect: false })),
+    ]);
+
+    return {
+      taskId,
+      wordId: word.id,
+      word,
+      quizType: 'GRAMMAR_USAGE',
+      prompt: match.prompt,
+      subPrompt: match.subPrompt,
+      options,
+    };
+  }
+
+  /**
+   * 综合调度入口（自动进行短语分流与针对性考题匹配）
    */
   static createQuiz(
     type: QuizType,
@@ -361,6 +570,12 @@ export class QuestionFactory {
         return this.createSentenceFill(word, pool, taskId);
       case 'SPELLING':
         return this.createSpelling(word, taskId);
+      case 'PART_OF_SPEECH':
+        return this.createPartOfSpeech(word, pool, taskId);
+      case 'FORM_TRANSFORMATION':
+        return this.createFormTransformation(word, pool, taskId);
+      case 'GRAMMAR_USAGE':
+        return this.createGrammarUsage(word, taskId);
       default:
         return this.createMeaningChoice(word, pool, taskId);
     }

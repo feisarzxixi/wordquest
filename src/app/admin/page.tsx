@@ -58,7 +58,7 @@ export default function AdminPage() {
   useEffect(() => {
     const auth = sessionStorage.getItem('wq_admin_auth');
     const user = ClientSession.getCurrentUser();
-    if (auth === 'true' || user.role === 'admin') {
+    if (auth === 'true' || user?.role === 'admin') {
       setIsAuthenticated(true);
       sessionStorage.setItem('wq_admin_auth', 'true');
       fetchAdminData();

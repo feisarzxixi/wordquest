@@ -6,8 +6,9 @@ export const SRS_INTERVALS = [1, 3, 7, 14, 30] as const;
 
 export const DAILY_WORDS_CAP = 30; // 每日最大总词量防雪崩上限
 
-export const BATCH_SIZE_MIN = 3;  // 认知闭环单组最小词数
-export const BATCH_SIZE_MAX = 5;  // 认知闭环单组最大词数
+export const BATCH_SIZE_MIN = 6;  // 认知闭环单组最小词数
+export const BATCH_SIZE_MAX = 8;  // 认知闭环单组最大词数（每组测试扩充至 8 个单词）
+export const BATCH_SIZE_TARGET = 8;
 
 export const MASTERY_INTERVAL_THRESHOLD = 14; // 判定为【已掌握】的最小间隔天数
 

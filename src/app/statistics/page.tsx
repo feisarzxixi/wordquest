@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { COPYWRITING } from '../../config/copywriting';
+import { ClientSession } from '../../lib/auth/clientSession';
 import {
   Flame,
   Award,
@@ -25,7 +26,9 @@ export default function StatisticsPage() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/stats').then((r) => r.json());
+      const res = await fetch('/api/stats', {
+        headers: ClientSession.getAuthHeaders(),
+      }).then((r) => r.json());
       if (res.success) {
         setStats(res.data);
       }

@@ -1,10 +1,11 @@
 /**
  * 每日学习计划排程与认知负荷自适应引擎 (Plan & Batching Engine)
- * 纯函数：防雪崩 30 词截断、自适应生熟度配比、短语专项题型分流、3~5 词组块闭环
+ * 纯函数：防雪崩 30 词截断、词元合并过滤、无剧透复习分流、每组 8 词闭环多样化题型
  */
 
-import { DAILY_WORDS_CAP, BATCH_SIZE_MIN, BATCH_SIZE_MAX, COGNITIVE_LOAD_THRESHOLDS } from '../../config/learningRules';
+import { DAILY_WORDS_CAP, BATCH_SIZE_MIN, BATCH_SIZE_MAX, BATCH_SIZE_TARGET, COGNITIVE_LOAD_THRESHOLDS } from '../../config/learningRules';
 import { DifficultyTier, DIFFICULTY_CONFIGS } from '../../config/gamification';
+import { processLemmatization } from './lemmatizer';
 
 export interface BaseWord {
   id: string;
@@ -15,6 +16,7 @@ export interface BaseWord {
   example?: string | null;
   translation?: string | null;
   image?: string | null;
+  forms?: { plural?: string; past?: string; ing?: string };
 }
 
 export type QuizType =
@@ -22,9 +24,12 @@ export type QuizType =
   | 'AUDIO_CHOICE'
   | 'SENTENCE_FILL'
   | 'SPELLING'
-  | 'PHRASE_BLOCKS'     // 短语专属：语块积木拼装
-  | 'PREPOSITION_FILL'  // 短语专属：核心介词挖空
-  | 'MATCHING';          // 连线配对题：左边 4 个英语单词/短语，右边 4 个翻译
+  | 'PHRASE_BLOCKS'        // 短语专属：语块积木拼装
+  | 'PREPOSITION_FILL'     // 短语专属：核心介词挖空
+  | 'MATCHING'             // 连线配对题：4对4 独立着色配对
+  | 'PART_OF_SPEECH'       // 词性辨析题：选择动词/形容词/名词
+  | 'FORM_TRANSFORMATION'  // 词形时态题：原形变过去式/复数
+  | 'GRAMMAR_USAGE';       // 语法理解题：Workbook 经典语法功能理解
 
 export interface PlanTaskItem {
   taskId: string;
@@ -39,6 +44,8 @@ export interface PlanTaskItem {
 export interface LearningBatch {
   batchIndex: number;
   wordIds: string[];
+  newWordIds?: string[];      // 仅属于首次学习的新词 ID 集合
+  reviewWordIds?: string[];   // 属于 SRS 周期复习的旧词 ID 集合 (严禁提前剧透释义)
   words: BaseWord[];
   testTasks: PlanTaskItem[];
 }
@@ -93,40 +100,50 @@ export function getAdaptiveNewWordQuota(
 }
 
 /**
- * 将单词切分为 3~5 词的认知批次
+ * 将单词切分为每组 8 个单词的认知批次 (TARGET = 8)
  */
 export function splitIntoBatches(words: BaseWord[]): BaseWord[][] {
   if (words.length === 0) return [];
   const batches: BaseWord[][] = [];
   let remaining = [...words];
 
+  const targetSize = BATCH_SIZE_TARGET || 8;
+
   while (remaining.length > 0) {
-    if (remaining.length <= BATCH_SIZE_MAX) {
+    if (remaining.length <= targetSize) {
       batches.push(remaining);
       break;
     }
-    if (remaining.length === 6) {
-      batches.push(remaining.slice(0, 3));
-      batches.push(remaining.slice(3));
+    // 如果剩余在 9~12 之间，均分成两组避免出现过小碎批次 (如 5 + 5 或 5 + 6)
+    if (remaining.length < targetSize + 4) {
+      const half = Math.ceil(remaining.length / 2);
+      batches.push(remaining.slice(0, half));
+      batches.push(remaining.slice(half));
       break;
     }
-    const take = remaining.length >= 8 ? BATCH_SIZE_MAX : BATCH_SIZE_MIN;
-    batches.push(remaining.slice(0, take));
-    remaining = remaining.slice(take);
+
+    batches.push(remaining.slice(0, targetSize));
+    remaining = remaining.slice(targetSize);
   }
 
   return batches;
 }
 
 /**
- * 智能为单词或短语匹配最契合的题型
+ * 智能为单词或短语匹配最契合的题型（题型随机分发且丰富多样）
  */
 export function assignQuizType(word: BaseWord, indexSeed: number): QuizType {
   const isPhraseWord = isPhrase(word.word);
 
   if (isPhraseWord) {
-    // 短语专属题型轮换：绝不走单字母拼写！
-    const phraseTypes: QuizType[] = ['PHRASE_BLOCKS', 'PREPOSITION_FILL', 'MATCHING', 'MEANING_CHOICE', 'SENTENCE_FILL'];
+    // 短语专属题型轮换
+    const phraseTypes: QuizType[] = [
+      'PHRASE_BLOCKS',
+      'PREPOSITION_FILL',
+      'MATCHING',
+      'MEANING_CHOICE',
+      'SENTENCE_FILL',
+    ];
     let chosen = phraseTypes[indexSeed % phraseTypes.length];
     if (chosen === 'SENTENCE_FILL' && (!word.example || !word.translation)) {
       chosen = 'PHRASE_BLOCKS';
@@ -134,8 +151,18 @@ export function assignQuizType(word: BaseWord, indexSeed: number): QuizType {
     return chosen;
   }
 
-  // 单个单词常规题型轮换（涵盖单选、听音、拼写与 4对4 连线配对）
-  const wordTypes: QuizType[] = ['MEANING_CHOICE', 'AUDIO_CHOICE', 'MATCHING', 'SENTENCE_FILL', 'SPELLING'];
+  // 单个单词常规题型丰富多样化随机分发 (8 种综合题型)
+  const wordTypes: QuizType[] = [
+    'MEANING_CHOICE',       // 词义选择
+    'AUDIO_CHOICE',         // 听音辨词
+    'MATCHING',             // 连线配对
+    'SENTENCE_FILL',        // 句子理解
+    'SPELLING',             // 字母拼写
+    'PART_OF_SPEECH',       // 词性辨析 (动词/形容词/名词)
+    'FORM_TRANSFORMATION',  // 词形时态 (过去式/复数)
+    'GRAMMAR_USAGE',        // 语法理解
+  ];
+
   let chosen = wordTypes[indexSeed % wordTypes.length];
   if (chosen === 'SENTENCE_FILL' && (!word.example || !word.translation)) {
     chosen = 'MEANING_CHOICE';
@@ -144,7 +171,7 @@ export function assignQuizType(word: BaseWord, indexSeed: number): QuizType {
 }
 
 /**
- * 生成每日初始计划
+ * 生成每日初始计划（集成词元合并与旧词无剧透复习分流）
  */
 export function generateDailyPlan(
   dueReviewWords: BaseWord[],
@@ -159,11 +186,18 @@ export function generateDailyPlan(
     baseTarget
   );
 
+  // 1. 词元合并与元语法词清洗过滤 (杜绝 verb, verbs 独立出现，合并 330+ 规则复数变形)
+  const cleanReviewPool = processLemmatization(dueReviewWords).primaryWords;
+  const cleanUnlearnedPool = processLemmatization(unlearnedWords).primaryWords;
+
   // 防雪崩 30 词截断：优先安排到期复习词
-  const reviewWords = dueReviewWords.slice(0, DAILY_WORDS_CAP);
+  const reviewWords = cleanReviewPool.slice(0, DAILY_WORDS_CAP);
   const remainingSlots = Math.max(0, DAILY_WORDS_CAP - reviewWords.length);
-  const actualNewWordTake = Math.min(targetNewWordCount, remainingSlots, unlearnedWords.length);
-  const newWords = unlearnedWords.slice(0, actualNewWordTake);
+  const actualNewWordTake = Math.min(targetNewWordCount, remainingSlots, cleanUnlearnedPool.length);
+  const newWords = cleanUnlearnedPool.slice(0, actualNewWordTake);
+
+  const reviewWordIdSet = new Set(reviewWords.map((w) => w.id));
+  const newWordIdSet = new Set(newWords.map((w) => w.id));
 
   const allWords = [...reviewWords, ...newWords];
   const rawBatches = splitIntoBatches(allWords);
@@ -174,7 +208,7 @@ export function generateDailyPlan(
       taskId: `${planDateStr}-b${batchIdx}-t${wordIdx}-${word.id}`,
       wordId: word.id,
       word,
-      taskType: assignQuizType(word, batchIdx * 5 + wordIdx),
+      taskType: assignQuizType(word, batchIdx * 8 + wordIdx),
       isAnswered: false,
       isFirstTryCorrect: null,
       scoreAwarded: false,
@@ -183,6 +217,8 @@ export function generateDailyPlan(
     return {
       batchIndex: batchIdx,
       wordIds: batchWords.map((w) => w.id),
+      newWordIds: batchWords.filter((w) => newWordIdSet.has(w.id)).map((w) => w.id),
+      reviewWordIds: batchWords.filter((w) => reviewWordIdSet.has(w.id)).map((w) => w.id),
       words: batchWords,
       testTasks,
     };
@@ -202,7 +238,7 @@ export function generateDailyPlan(
 }
 
 /**
- * 生成“无尽加练模式”下的单批微计划 (3~5 词)
+ * 生成“无尽加练模式”下的单批微计划 (每组 8 词)
  * 严格按照在学词负荷 (N) 动态决定加不加新词
  */
 export function generateNextEndlessBatch(
@@ -212,41 +248,46 @@ export function generateNextEndlessBatch(
   batchIndex: number,
   sessionDateStr: string = new Date().toISOString().split('T')[0]
 ): LearningBatch {
-  const { quota, tier } = getAdaptiveNewWordQuota(activeLearningCount, 5);
+  const cleanReview = processLemmatization(allReviewWords).primaryWords;
+  const cleanUnlearned = processLemmatization(unlearnedWords).primaryWords;
+
+  const { quota, tier } = getAdaptiveNewWordQuota(activeLearningCount, 8);
 
   let newWordTake = 0;
   if (tier === 'FREEZE') {
     newWordTake = 0; // 熔断：0 新词！
   } else if (tier === 'REDUCE') {
-    // 减速：每两三个批次才可能带 1 个新词
-    newWordTake = (batchIndex % 2 === 0 && unlearnedWords.length > 0) ? 1 : 0;
+    newWordTake = (batchIndex % 2 === 0 && cleanUnlearned.length > 0) ? 1 : 0;
   } else if (tier === 'STANDARD') {
-    newWordTake = Math.min(1, unlearnedWords.length);
+    newWordTake = Math.min(2, cleanUnlearned.length);
   } else {
-    // 快跑：可放 2 个新词
-    newWordTake = Math.min(2, unlearnedWords.length);
+    // 快跑：可放 3 个新词
+    newWordTake = Math.min(3, cleanUnlearned.length);
   }
 
-  const batchSize = Math.min(5, Math.max(3, 4));
+  const batchSize = Math.min(8, Math.max(6, 8));
   const oldWordTake = batchSize - newWordTake;
 
   // 乱序抓取旧词
-  const shuffledOld = [...allReviewWords].sort(() => 0.5 - Math.random());
+  const shuffledOld = [...cleanReview].sort(() => 0.5 - Math.random());
   const selectedOld = shuffledOld.slice(0, oldWordTake);
-  const selectedNew = unlearnedWords.slice(0, newWordTake);
+  const selectedNew = cleanUnlearned.slice(0, newWordTake);
 
   const batchWords = [...selectedOld, ...selectedNew].sort(() => 0.5 - Math.random());
 
-  // 保证至少有 3 个词可练
-  if (batchWords.length < 3 && allReviewWords.length >= 3) {
-    batchWords.push(...shuffledOld.slice(batchWords.length, 3));
+  // 保证至少有 4 个词可练
+  if (batchWords.length < 4 && cleanReview.length >= 4) {
+    batchWords.push(...shuffledOld.slice(batchWords.length, 4));
   }
+
+  const newWordIdSet = new Set(selectedNew.map((w) => w.id));
+  const reviewWordIdSet = new Set(selectedOld.map((w) => w.id));
 
   const testTasks: PlanTaskItem[] = batchWords.map((word, wordIdx) => ({
     taskId: `endless-${sessionDateStr}-b${batchIndex}-t${wordIdx}-${word.id}`,
     wordId: word.id,
     word,
-    taskType: assignQuizType(word, batchIndex * 7 + wordIdx),
+    taskType: assignQuizType(word, batchIndex * 8 + wordIdx),
     isAnswered: false,
     isFirstTryCorrect: null,
     scoreAwarded: false,
@@ -255,6 +296,8 @@ export function generateNextEndlessBatch(
   return {
     batchIndex,
     wordIds: batchWords.map((w) => w.id),
+    newWordIds: batchWords.filter((w) => newWordIdSet.has(w.id)).map((w) => w.id),
+    reviewWordIds: batchWords.filter((w) => reviewWordIdSet.has(w.id)).map((w) => w.id),
     words: batchWords,
     testTasks,
   };
