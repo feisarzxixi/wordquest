@@ -11,6 +11,7 @@ import path from 'path';
 import { DifficultyTier, DIFFICULTY_CONFIGS } from '../../config/gamification';
 import { BaseWord, LearningBatch } from '../algorithms/planEngine';
 import { MASTERY_INTERVAL_THRESHOLD } from '../../config/learningRules';
+import { formatDate } from '../algorithms/srsScheduler';
 import seedWordsRaw from '../../data/seedWords.json';
 
 export interface UserSettings {
@@ -526,9 +527,9 @@ export class LocalDB {
     if (!student.dailyStudyTime) {
       student.dailyStudyTime = {};
     }
-    const today = date || new Date().toISOString().split('T')[0];
+    const today = date || formatDate(new Date());
     const prev = student.dailyStudyTime[today] || 0;
-    const nextVal = Math.round((prev + minutes) * 10) / 10;
+    const nextVal = Math.round((prev + minutes) * 100) / 100;
     student.dailyStudyTime[today] = nextVal;
     this.persist();
     return nextVal;
@@ -551,11 +552,12 @@ export class LocalDB {
 
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 86400000);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = formatDate(d);
       const isToday = i === 0;
       const label = `${d.getMonth() + 1}/${d.getDate()}`;
       const weekday = isToday ? '今天' : weekDayNames[d.getDay()];
-      const minutes = map[dateStr] || 0;
+      const rawMinutes = map[dateStr] || 0;
+      const minutes = Math.round(rawMinutes * 10) / 10;
 
       result.push({
         date: dateStr,
@@ -647,8 +649,9 @@ export class LocalDB {
     const accuracyRate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
     const recent7DaysTime = this.getRecentStudyTimes(studentId, 7);
     const recent7DaysWordCounts = this.getRecentLearnedWordCounts(studentId, 7);
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayStudyMinutes = (student.dailyStudyTime && student.dailyStudyTime[todayStr]) || 0;
+    const todayStr = formatDate(new Date());
+    const rawTodayMinutes = (student.dailyStudyTime && student.dailyStudyTime[todayStr]) || 0;
+    const todayStudyMinutes = Math.round(rawTodayMinutes * 10) / 10;
     const totalStudyMinutes = student.dailyStudyTime
       ? Object.values(student.dailyStudyTime).reduce((a, b) => a + b, 0)
       : 0;

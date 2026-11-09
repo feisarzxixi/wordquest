@@ -119,16 +119,16 @@ export const LetterInput: React.FC<LetterInputProps> = ({
   const isAllFilled = slots.every((s, idx) => !s.isInput || filledLetters[idx] !== null);
 
   return (
-    <div className="flex flex-col items-center gap-6 my-2 w-full select-none">
+    <div className="flex flex-col items-center gap-3 sm:gap-6 my-1 sm:my-2 w-full select-none">
       {/* 1. 顶部单词填空槽位区 */}
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-full">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 max-w-full">
         {slots.map((slot, idx) => {
           if (!slot.isInput) {
             // 固定已给出的字符
             return (
               <div
                 key={idx}
-                className="w-11 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-2xl font-bold rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 shadow-inner"
+                className="w-9 h-12 sm:w-14 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-bold rounded-xl sm:rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 shadow-inner"
               >
                 {slot.letter}
               </div>
@@ -142,7 +142,7 @@ export const LetterInput: React.FC<LetterInputProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => handleRemoveSlot(idx)}
-              className={`w-11 h-14 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-2xl font-black rounded-2xl border-2 transition-all active:scale-95 ${
+              className={`w-9 h-12 sm:w-14 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black rounded-xl sm:rounded-2xl border-2 transition-all active:scale-95 ${
                 filledChar
                   ? 'bg-indigo-600 text-white border-indigo-700 shadow-md shadow-indigo-200'
                   : 'bg-white border-dashed border-indigo-300 text-slate-300 hover:border-indigo-400'
@@ -154,20 +154,20 @@ export const LetterInput: React.FC<LetterInputProps> = ({
         })}
       </div>
 
-      <p className="text-xs text-slate-400 font-medium">
+      <p className="text-[11px] sm:text-xs text-slate-400 font-medium">
         👆 点击下方备选字母填入空位，点击已填字母可撤回
       </p>
 
-      {/* 2. 下方备选字母积木池 (专为 iPad 触控优化，超大触控热区) */}
-      <div className="w-full max-w-md bg-slate-50/80 p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-3">
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
+      {/* 2. 下方备选字母积木池 (专为触控优化，高响应触控热区) */}
+      <div className="w-full max-w-md bg-slate-50/80 p-3 sm:p-4 rounded-2xl border border-slate-100 flex flex-col items-center gap-2.5 sm:gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
           {chips.map((chip) => (
             <button
               key={chip.id}
               type="button"
               disabled={disabled || chip.isUsed}
               onClick={() => handleSelectChip(chip)}
-              className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black rounded-2xl border-2 transition-all active:scale-90 ${
+              className={`w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center text-lg sm:text-2xl font-black rounded-xl sm:rounded-2xl border-2 transition-all active:scale-90 ${
                 chip.isUsed
                   ? 'bg-slate-200/50 border-slate-200 text-slate-300 opacity-40 pointer-events-none'
                   : 'bg-white border-slate-200 text-slate-800 hover:border-indigo-400 hover:bg-indigo-50/50 shadow-sm'

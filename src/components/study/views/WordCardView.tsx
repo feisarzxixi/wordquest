@@ -27,30 +27,30 @@ export const WordCardView: React.FC<WordCardViewProps> = ({
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
       {/* 组块进度提示 */}
-      <div className="flex items-center gap-2 mb-4 text-xs font-semibold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4 text-xs font-semibold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
         <span>第 {batchIndex + 1} 组识记</span>
         <span>•</span>
         <span>{wordIndexInBatch + 1} / {totalInBatch}</span>
       </div>
 
-      <Card className="w-full flex flex-col items-center text-center p-6 sm:p-10 shadow-xl border-indigo-50 overflow-hidden">
+      <Card className="w-full flex flex-col items-center text-center p-4 sm:p-8 md:p-10 shadow-xl border-indigo-50 overflow-hidden">
         {/* 单词配图（800*400，自适应折叠） */}
         <WordImageBanner
           word={word.word}
           image={word.image}
-          className="rounded-2xl mb-5 shadow-sm"
+          className="rounded-2xl mb-3 sm:mb-5 shadow-sm"
         />
 
         {/* 英文主词与发音 */}
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+        <div className="flex items-center justify-center gap-2.5 sm:gap-3 mb-1 sm:mb-2">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
             {word.word}
           </h1>
           <SpeakerBtn text={word.word} size="lg" autoPlayOnMount />
         </div>
 
         {/* 音标与词性 */}
-        <div className="flex items-center gap-2 text-slate-500 font-mono text-base sm:text-lg mb-5">
+        <div className="flex items-center gap-2 text-slate-500 font-mono text-sm sm:text-lg mb-3 sm:mb-4">
           {word.phonetic && <span>{word.phonetic}</span>}
           {word.pos && (
             <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
@@ -60,44 +60,44 @@ export const WordCardView: React.FC<WordCardViewProps> = ({
         </div>
 
         {/* 中文释义 */}
-        <div className="w-full py-3.5 px-6 bg-slate-50 rounded-2xl mb-5 border border-slate-100">
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-800">
+        <div className="w-full py-2.5 sm:py-3.5 px-4 sm:px-6 bg-slate-50 rounded-2xl mb-3 sm:mb-4 border border-slate-100">
+          <p className="text-xl sm:text-3xl font-extrabold text-slate-800">
             {word.meaning}
           </p>
         </div>
 
         {/* 英文例句与翻译 */}
         {word.example && (
-          <div className="w-full text-left bg-indigo-50/40 rounded-2xl p-4 sm:p-5 border border-indigo-100/60 mb-6">
+          <div className="w-full text-left bg-indigo-50/40 rounded-2xl p-3 sm:p-5 border border-indigo-100/60 mb-3 sm:mb-5">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-slate-800 text-base sm:text-lg font-medium leading-relaxed">
+              <p className="text-slate-800 text-sm sm:text-base font-medium leading-relaxed">
                 {word.example}
               </p>
               <SpeakerBtn text={word.example} size="sm" className="shrink-0 mt-0.5" />
             </div>
             {word.translation && (
-              <p className="text-slate-500 text-sm mt-1.5 font-medium">{word.translation}</p>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1 font-medium">{word.translation}</p>
             )}
           </div>
         )}
 
         {/* 底部双按钮 */}
-        <div className="w-full grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+        <div className="w-full grid grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-100">
           <button
             type="button"
             onClick={onUnknown}
-            className="py-3.5 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 transition-all active:scale-95 shadow-sm flex items-center justify-center cursor-pointer"
+            className="py-3 sm:py-3.5 px-4 sm:px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 transition-all active:scale-95 shadow-sm flex items-center justify-center cursor-pointer"
           >
-            <span className="font-extrabold text-base sm:text-lg text-slate-800">
+            <span className="font-extrabold text-sm sm:text-lg text-slate-800">
               我不认识
             </span>
           </button>
           <button
             type="button"
             onClick={onKnown}
-            className="py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center justify-center cursor-pointer"
+            className="py-3 sm:py-3.5 px-4 sm:px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center justify-center cursor-pointer"
           >
-            <span className="font-extrabold text-base sm:text-lg text-white">
+            <span className="font-extrabold text-sm sm:text-lg text-white">
               我认识
             </span>
           </button>

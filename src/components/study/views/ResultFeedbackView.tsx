@@ -41,22 +41,22 @@ export const ResultFeedbackView: React.FC<ResultFeedbackViewProps> = ({
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center select-none">
       <Card
-        className={`w-full p-6 sm:p-10 shadow-xl border-2 transition-all overflow-hidden ${
+        className={`w-full p-4 sm:p-8 md:p-10 shadow-xl border-2 transition-all overflow-hidden ${
           isCorrect
             ? 'bg-gradient-to-b from-emerald-50/70 to-white border-emerald-300'
             : 'bg-gradient-to-b from-rose-50/70 to-white border-rose-300'
         }`}
       >
         {/* 对错头部状态与得分 */}
-        <div className="flex items-center justify-between w-full mb-4 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between w-full mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {isCorrect ? (
-              <CheckCircle2 className="w-7 h-7 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 shrink-0" />
             ) : (
-              <XCircle className="w-7 h-7 text-rose-600 shrink-0" />
+              <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-rose-600 shrink-0" />
             )}
             <span
-              className={`text-xl sm:text-2xl font-extrabold ${
+              className={`text-lg sm:text-2xl font-extrabold ${
                 isCorrect ? 'text-emerald-700' : 'text-rose-700'
               }`}
             >
@@ -65,7 +65,7 @@ export const ResultFeedbackView: React.FC<ResultFeedbackViewProps> = ({
           </div>
 
           <div
-            className={`px-3 py-1 rounded-full text-xs font-bold ${
+            className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold ${
               isCorrect && isFirstTry
                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                 : 'bg-slate-100 text-slate-500'
@@ -79,19 +79,19 @@ export const ResultFeedbackView: React.FC<ResultFeedbackViewProps> = ({
         <WordImageBanner
           word={word.word}
           image={word.image}
-          className="rounded-2xl mb-5 shadow-sm"
+          className="rounded-2xl mb-3 sm:mb-5 shadow-sm"
         />
 
         {/* 核心单词与释义解析 */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex items-center justify-center gap-3 mb-1">
-            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">
+          <div className="flex items-center justify-center gap-2.5 sm:gap-3 mb-1">
+            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
               {word.word}
             </h1>
             <SpeakerBtn text={word.word} size="md" autoPlayOnMount />
           </div>
 
-          <div className="flex items-center gap-2 text-slate-500 font-mono text-base mb-4">
+          <div className="flex items-center gap-2 text-slate-500 font-mono text-sm sm:text-base mb-2.5 sm:mb-4">
             {word.phonetic && <span>{word.phonetic}</span>}
             {word.pos && (
               <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
@@ -100,29 +100,29 @@ export const ResultFeedbackView: React.FC<ResultFeedbackViewProps> = ({
             )}
           </div>
 
-          <div className="w-full py-3 px-6 bg-slate-50 rounded-2xl mb-5 border border-slate-100">
-            <p className="text-2xl font-extrabold text-slate-800">{word.meaning}</p>
+          <div className="w-full py-2.5 sm:py-3 px-4 sm:px-6 bg-slate-50 rounded-2xl mb-3 sm:mb-5 border border-slate-100">
+            <p className="text-xl sm:text-2xl font-extrabold text-slate-800">{word.meaning}</p>
           </div>
 
           {/* 完整例句与翻译复盘 */}
           {word.example && (
-            <div className="w-full text-left bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-5">
-              <p className="text-slate-800 text-base font-semibold leading-relaxed">
+            <div className="w-full text-left bg-white rounded-2xl p-3 sm:p-5 border border-slate-200 shadow-sm mb-3 sm:mb-5">
+              <p className="text-slate-800 text-sm sm:text-base font-semibold leading-relaxed">
                 {word.example}
               </p>
               {word.translation && (
-                <p className="text-slate-500 text-sm mt-1.5 font-medium">{word.translation}</p>
+                <p className="text-slate-500 text-xs sm:text-sm mt-1 font-medium">{word.translation}</p>
               )}
             </div>
           )}
         </div>
 
         {/* 底部操作区：完全由孩子主动点击推进，绝不自动跳过 */}
-        <div className="w-full flex flex-col items-center mt-2 pt-2 border-t border-slate-100">
+        <div className="w-full flex flex-col items-center mt-1 sm:mt-2 pt-2 border-t border-slate-100">
           <button
             type="button"
             onClick={onNext}
-            className={`w-full sm:w-auto min-w-[240px] px-10 py-3.5 rounded-2xl active:scale-95 text-white font-extrabold text-lg shadow-lg flex items-center justify-center gap-2 transition-all ${
+            className={`w-full sm:w-auto min-w-[240px] px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl active:scale-95 text-white font-extrabold text-base sm:text-lg shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
               isCorrect
                 ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
                 : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
@@ -131,7 +131,7 @@ export const ResultFeedbackView: React.FC<ResultFeedbackViewProps> = ({
             <span>{isLastTask ? '完成今日学习 ➔' : '下一题 ➔'}</span>
             <ArrowRight size={20} />
           </button>
-          <p className="text-xs text-slate-400 mt-2.5 font-medium">
+          <p className="text-xs text-slate-400 mt-2 font-medium">
             不急，仔细看完例句并可复听发音，点击按钮或按回车进入下一题
           </p>
         </div>

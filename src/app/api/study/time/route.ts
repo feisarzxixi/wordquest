@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const studentId = getStudentIdFromRequest(req);
     const body = await req.json();
+    const studentId = body.studentId || getStudentIdFromRequest(req);
     const minutes = body.minutes || (body.seconds ? body.seconds / 60 : 0.5);
 
     const updatedToday = LocalDB.recordStudyTime(minutes, undefined, studentId);

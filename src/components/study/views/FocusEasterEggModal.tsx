@@ -44,10 +44,12 @@ export const FocusEasterEggModal: React.FC<FocusEasterEggModalProps> = ({ onCont
         <button
           type="button"
           onClick={onContinue}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-98 text-white font-extrabold text-lg shadow-lg shadow-orange-200 flex items-center justify-center gap-2 transition-all"
+          className="w-full py-4 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white shadow-xl shadow-amber-600/30 flex items-center justify-center gap-2 cursor-pointer transition-all border border-amber-500/50"
         >
-          <span>{COPYWRITING.study.btnEasterEggContinue}</span>
-          <ArrowRight size={20} />
+          <span className="text-white font-black text-lg tracking-wide">
+            {COPYWRITING.study.btnEasterEggContinue || '收下鼓励，继续学习 ➔'}
+          </span>
+          <ArrowRight size={22} className="text-white shrink-0 stroke-[3]" />
         </button>
       </Card>
     </div>

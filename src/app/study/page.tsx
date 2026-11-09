@@ -17,6 +17,7 @@ import { FOCUS_EASTER_EGG_MS } from '../../config/learningRules';
 import { COPYWRITING } from '../../config/copywriting';
 import { Card } from '../../components/ui/Card';
 import { initClientImageCache, preloadWordImages } from '../../lib/images/clientImageCache';
+import { ClientSession } from '../../lib/auth/clientSession';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 
@@ -49,9 +50,9 @@ function StudyInner() {
     isLastTask: boolean;
   } | null>(null);
 
-  // 15 分钟专注成就彩蛋控制
+  // 15 分钟专注成就彩蛋控制（严格采用与学习统计完全一致的真操作专注计时器）
   const [showEasterEgg, setShowEasterEgg] = useState(false);
-  const practiceStartMsRef = useRef<number>(Date.now());
+  const sessionActiveSecondsRef = useRef<number>(0);
   const hasTriggeredEasterEggRef = useRef<boolean>(false);
 
   // 今日完成结算数据暂存
@@ -78,9 +79,25 @@ function StudyInner() {
     };
   }, []);
 
-  // 实时累加专注学习时长：增加防发呆/防挂机机制（超过 20 秒无触屏操作自动停止计时）
+  // 实时累加专注学习时长：严格执行防发呆/防挂机机制（超过 20 秒无触屏操作自动停止计时）
   const lastInteractionRef = useRef<number>(Date.now());
   const activeSecondsAccumulatorRef = useRef<number>(0);
+
+  // 统一的专注时长上报函数，附带精准学生账号与防丢保障
+  const reportActiveSeconds = (sec: number) => {
+    if (sec <= 0) return;
+    try {
+      const currentUser = ClientSession.getCurrentUser();
+      fetch('/api/study/time', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-student-id': currentUser.id,
+        },
+        body: JSON.stringify({ seconds: sec, studentId: currentUser.id }),
+      }).catch(() => {});
+    } catch (e) {}
+  };
 
   useEffect(() => {
     // 监听用户活跃触碰与按键
@@ -95,20 +112,29 @@ function StudyInner() {
     const secondTicker = setInterval(() => {
       const now = Date.now();
       const isVisible = typeof document !== 'undefined' && document.visibilityState === 'visible';
-      const isUserActive = now - lastInteractionRef.current <= 20000; // 20 秒无操作熔断
+      const isUserActive = now - lastInteractionRef.current <= 20000; // 20 秒无操作防发呆熔断
 
       if (isVisible && isUserActive) {
         activeSecondsAccumulatorRef.current += 1;
+        sessionActiveSecondsRef.current += 1;
+
+        // 统一专注力彩蛋判定：真实有效专注达到 15 分钟（900 秒）
+        if (sessionActiveSecondsRef.current >= 900 && !hasTriggeredEasterEggRef.current) {
+          hasTriggeredEasterEggRef.current = true;
+          // 立即将累加秒数同步上报到服务端，保证立刻去统计页查看时 100% 同步计入
+          const reportSec = activeSecondsAccumulatorRef.current;
+          activeSecondsAccumulatorRef.current = 0;
+          if (reportSec > 0) {
+            reportActiveSeconds(reportSec);
+          }
+          setShowEasterEgg(true);
+        }
 
         // 累计满 15 秒真实有效操作，向服务端上报一次
         if (activeSecondsAccumulatorRef.current >= 15) {
           const reportSec = activeSecondsAccumulatorRef.current;
           activeSecondsAccumulatorRef.current = 0;
-          fetch('/api/study/time', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ seconds: reportSec }),
-          }).catch(() => {});
+          reportActiveSeconds(reportSec);
         }
       }
     }, 1000);
@@ -116,13 +142,9 @@ function StudyInner() {
     return () => {
       events.forEach((evt) => window.removeEventListener(evt, markActive));
       clearInterval(secondTicker);
-      // 页面销毁时上报剩余未上报的活跃秒数
-      if (activeSecondsAccumulatorRef.current >= 3) {
-        fetch('/api/study/time', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ seconds: activeSecondsAccumulatorRef.current }),
-        }).catch(() => {});
+      // 页面销毁或切出时上报剩余未上报的活跃秒数
+      if (activeSecondsAccumulatorRef.current >= 2) {
+        reportActiveSeconds(activeSecondsAccumulatorRef.current);
       }
     };
   }, []);
@@ -297,10 +319,14 @@ function StudyInner() {
       task.isAnswered = true;
       task.isFirstTryCorrect = isCorrect;
 
-      // 检查加练是否满 15 分钟专注
-      const activeMs = Date.now() - practiceStartMsRef.current;
-      if (activeMs >= FOCUS_EASTER_EGG_MS && !hasTriggeredEasterEggRef.current) {
+      // 检查加练是否满 15 分钟真实专注（双重保障）
+      if (sessionActiveSecondsRef.current >= 900 && !hasTriggeredEasterEggRef.current) {
         hasTriggeredEasterEggRef.current = true;
+        const reportSec = activeSecondsAccumulatorRef.current;
+        activeSecondsAccumulatorRef.current = 0;
+        if (reportSec > 0) {
+          reportActiveSeconds(reportSec);
+        }
         setShowEasterEgg(true);
       }
 
@@ -568,7 +594,7 @@ function StudyInner() {
         <FocusEasterEggModal
           onContinue={() => {
             setShowEasterEgg(false);
-            practiceStartMsRef.current = Date.now(); // 开启下一轮 15 分钟
+            sessionActiveSecondsRef.current = 0; // 开启下一轮 15 分钟专注周期
             hasTriggeredEasterEggRef.current = false;
           }}
         />

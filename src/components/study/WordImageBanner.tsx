@@ -54,7 +54,7 @@ export const WordImageBanner: React.FC<WordImageBannerProps> = ({
   return (
     <div
       className={`w-full relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center select-none shadow-sm ${className}`}
-      style={{ aspectRatio: '2 / 1', maxHeight: '220px' }}
+      style={{ aspectRatio: '2.1 / 1', maxHeight: 'clamp(130px, 20vh, 220px)' }}
     >
       <img
         ref={imgRef}
