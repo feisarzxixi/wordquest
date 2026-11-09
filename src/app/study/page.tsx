@@ -16,6 +16,7 @@ import { FocusEasterEggModal } from '../../components/study/views/FocusEasterEgg
 import { FOCUS_EASTER_EGG_MS } from '../../config/learningRules';
 import { COPYWRITING } from '../../config/copywriting';
 import { Card } from '../../components/ui/Card';
+import { initClientImageCache } from '../../lib/images/clientImageCache';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 
@@ -133,6 +134,7 @@ function StudyInner() {
 
   const fetchSession = async () => {
     try {
+      initClientImageCache();
       if (isPracticeMode) {
         // 进入无尽加练流
         fetchNextPracticeBatch(0);

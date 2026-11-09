@@ -36028,6 +36028,974 @@
       ],
       "createdAt": "2026-11-08T12:17:31.550Z",
       "updatedAt": "2026-11-08T13:50:01.781Z"
+    },
+    "2026-11-09": {
+      "id": "plan-2026-11-09-student-default",
+      "date": "2026-11-09",
+      "difficulty": "master",
+      "targetNewWordCount": 20,
+      "totalWordCount": 29,
+      "isCompleted": false,
+      "bonusAwarded": false,
+      "currentBatchIndex": 0,
+      "currentTaskIndex": 0,
+      "batches": [
+        {
+          "batchIndex": 0,
+          "wordIds": [
+            "seed-8-afford",
+            "seed-11-annoy",
+            "seed-20-benefit",
+            "seed-22-brilliant",
+            "seed-23-calm"
+          ],
+          "words": [
+            {
+              "id": "seed-8-afford",
+              "word": "afford",
+              "phonetic": "/əˈfɔːd/",
+              "meaning": "买得起；负担得起",
+              "pos": "v.",
+              "example": "We can afford this new computer.",
+              "translation": "我们买得起这台新电脑。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-11-annoy",
+              "word": "annoy",
+              "phonetic": "/əˈnɔɪ/",
+              "meaning": "打扰；使烦恼",
+              "pos": "v.",
+              "example": "Loud noise can annoy people easily.",
+              "translation": "巨大的噪音很容易让人心烦。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-20-benefit",
+              "word": "benefit",
+              "phonetic": "/ˈbenɪfɪt/",
+              "meaning": "利益；好处",
+              "pos": "n.",
+              "example": "Reading books brings great benefit to students.",
+              "translation": "读书给学生带来巨大的益处。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-22-brilliant",
+              "word": "brilliant",
+              "phonetic": "/ˈbrɪliənt/",
+              "meaning": "杰出的；聪颖的",
+              "pos": "adj.",
+              "example": "She had a brilliant idea for the project.",
+              "translation": "她对这个项目有一个绝妙的主意。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-23-calm",
+              "word": "calm",
+              "phonetic": "/kɑːm/",
+              "meaning": "镇静的；平静的",
+              "pos": "adj.",
+              "example": "Stay calm when you face difficulties.",
+              "translation": "面对困难时请保持镇静。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            }
+          ],
+          "testTasks": [
+            {
+              "taskId": "2026-11-09-b0-t0-seed-20-benefit",
+              "wordId": "seed-20-benefit",
+              "word": {
+                "id": "seed-20-benefit",
+                "word": "benefit",
+                "phonetic": "/ˈbenɪfɪt/",
+                "meaning": "利益；好处",
+                "pos": "n.",
+                "example": "Reading books brings great benefit to students.",
+                "translation": "读书给学生带来巨大的益处。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MEANING_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b0-t1-seed-22-brilliant",
+              "wordId": "seed-22-brilliant",
+              "word": {
+                "id": "seed-22-brilliant",
+                "word": "brilliant",
+                "phonetic": "/ˈbrɪliənt/",
+                "meaning": "杰出的；聪颖的",
+                "pos": "adj.",
+                "example": "She had a brilliant idea for the project.",
+                "translation": "她对这个项目有一个绝妙的主意。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "AUDIO_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b0-t2-seed-8-afford",
+              "wordId": "seed-8-afford",
+              "word": {
+                "id": "seed-8-afford",
+                "word": "afford",
+                "phonetic": "/əˈfɔːd/",
+                "meaning": "买得起；负担得起",
+                "pos": "v.",
+                "example": "We can afford this new computer.",
+                "translation": "我们买得起这台新电脑。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MATCHING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b0-t3-seed-11-annoy",
+              "wordId": "seed-11-annoy",
+              "word": {
+                "id": "seed-11-annoy",
+                "word": "annoy",
+                "phonetic": "/əˈnɔɪ/",
+                "meaning": "打扰；使烦恼",
+                "pos": "v.",
+                "example": "Loud noise can annoy people easily.",
+                "translation": "巨大的噪音很容易让人心烦。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SENTENCE_FILL",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b0-t4-seed-23-calm",
+              "wordId": "seed-23-calm",
+              "word": {
+                "id": "seed-23-calm",
+                "word": "calm",
+                "phonetic": "/kɑːm/",
+                "meaning": "镇静的；平静的",
+                "pos": "adj.",
+                "example": "Stay calm when you face difficulties.",
+                "translation": "面对困难时请保持镇静。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SPELLING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            }
+          ]
+        },
+        {
+          "batchIndex": 1,
+          "wordIds": [
+            "seed-24-celebrate",
+            "seed-25-challenge",
+            "seed-26-character",
+            "seed-27-comfortable",
+            "seed-28-communicate"
+          ],
+          "words": [
+            {
+              "id": "seed-24-celebrate",
+              "word": "celebrate",
+              "phonetic": "/ˈselɪbreɪt/",
+              "meaning": "庆祝；祝贺",
+              "pos": "v.",
+              "example": "We held a party to celebrate his birthday.",
+              "translation": "我们开了一个聚会来庆祝他的生日。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": "/words/celebrate.png"
+            },
+            {
+              "id": "seed-25-challenge",
+              "word": "challenge",
+              "phonetic": "/ˈtʃælɪndʒ/",
+              "meaning": "挑战；艰巨任务",
+              "pos": "n.",
+              "example": "Learning a new language is a great challenge.",
+              "translation": "学习一门新语言是一项巨大的挑战。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": "/words/challenge.png"
+            },
+            {
+              "id": "seed-26-character",
+              "word": "character",
+              "phonetic": "/ˈkærəktə(r)/",
+              "meaning": "性格；人物",
+              "pos": "n.",
+              "example": "Hard work builds a strong character.",
+              "translation": "艰苦的努力铸就坚强的性格。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-27-comfortable",
+              "word": "comfortable",
+              "phonetic": "/ˈkʌmftəbl/",
+              "meaning": "舒服的；舒适的",
+              "pos": "adj.",
+              "example": "These new shoes are very comfortable.",
+              "translation": "这双新鞋穿起来非常舒服。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-28-communicate",
+              "word": "communicate",
+              "phonetic": "/kəˈmjuːnɪkeɪt/",
+              "meaning": "交流；沟通",
+              "pos": "v.",
+              "example": "We should communicate with our parents often.",
+              "translation": "我们应该经常和父母沟通。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            }
+          ],
+          "testTasks": [
+            {
+              "taskId": "2026-11-09-b1-t0-seed-27-comfortable",
+              "wordId": "seed-27-comfortable",
+              "word": {
+                "id": "seed-27-comfortable",
+                "word": "comfortable",
+                "phonetic": "/ˈkʌmftəbl/",
+                "meaning": "舒服的；舒适的",
+                "pos": "adj.",
+                "example": "These new shoes are very comfortable.",
+                "translation": "这双新鞋穿起来非常舒服。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MEANING_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b1-t1-seed-24-celebrate",
+              "wordId": "seed-24-celebrate",
+              "word": {
+                "id": "seed-24-celebrate",
+                "word": "celebrate",
+                "phonetic": "/ˈselɪbreɪt/",
+                "meaning": "庆祝；祝贺",
+                "pos": "v.",
+                "example": "We held a party to celebrate his birthday.",
+                "translation": "我们开了一个聚会来庆祝他的生日。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": "/words/celebrate.png"
+              },
+              "taskType": "AUDIO_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b1-t2-seed-25-challenge",
+              "wordId": "seed-25-challenge",
+              "word": {
+                "id": "seed-25-challenge",
+                "word": "challenge",
+                "phonetic": "/ˈtʃælɪndʒ/",
+                "meaning": "挑战；艰巨任务",
+                "pos": "n.",
+                "example": "Learning a new language is a great challenge.",
+                "translation": "学习一门新语言是一项巨大的挑战。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": "/words/challenge.png"
+              },
+              "taskType": "MATCHING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b1-t3-seed-28-communicate",
+              "wordId": "seed-28-communicate",
+              "word": {
+                "id": "seed-28-communicate",
+                "word": "communicate",
+                "phonetic": "/kəˈmjuːnɪkeɪt/",
+                "meaning": "交流；沟通",
+                "pos": "v.",
+                "example": "We should communicate with our parents often.",
+                "translation": "我们应该经常和父母沟通。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SENTENCE_FILL",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b1-t4-seed-26-character",
+              "wordId": "seed-26-character",
+              "word": {
+                "id": "seed-26-character",
+                "word": "character",
+                "phonetic": "/ˈkærəktə(r)/",
+                "meaning": "性格；人物",
+                "pos": "n.",
+                "example": "Hard work builds a strong character.",
+                "translation": "艰苦的努力铸就坚强的性格。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SPELLING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            }
+          ]
+        },
+        {
+          "batchIndex": 2,
+          "wordIds": [
+            "seed-29-compare",
+            "seed-30-confident",
+            "seed-31-connect",
+            "seed-32-courage",
+            "seed-33-curious"
+          ],
+          "words": [
+            {
+              "id": "seed-29-compare",
+              "word": "compare",
+              "phonetic": "/kəmˈpeə(r)/",
+              "meaning": "比较；对比",
+              "pos": "v.",
+              "example": "Do not compare yourself with others.",
+              "translation": "不要总是拿自己和他人比较。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-30-confident",
+              "word": "confident",
+              "phonetic": "/ˈkɒnfɪdənt/",
+              "meaning": "自信的；确信的",
+              "pos": "adj.",
+              "example": "Be confident when you speak in public.",
+              "translation": "在公开演讲时要保持自信。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-31-connect",
+              "word": "connect",
+              "phonetic": "/kəˈnekt/",
+              "meaning": "连接；联结",
+              "pos": "v.",
+              "example": "The new bridge connects the two islands.",
+              "translation": "这座新桥把两座岛屿连接了起来。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-32-courage",
+              "word": "courage",
+              "phonetic": "/ˈkʌrɪdʒ/",
+              "meaning": "勇气；胆量",
+              "pos": "n.",
+              "example": "It takes courage to admit your mistakes.",
+              "translation": "承认自己的错误需要很大的勇气。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-33-curious",
+              "word": "curious",
+              "phonetic": "/ˈkjʊəriəs/",
+              "meaning": "好奇的；求知欲强的",
+              "pos": "adj.",
+              "example": "Children are always curious about nature.",
+              "translation": "孩子们对大自然总是充满好奇。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            }
+          ],
+          "testTasks": [
+            {
+              "taskId": "2026-11-09-b2-t0-seed-32-courage",
+              "wordId": "seed-32-courage",
+              "word": {
+                "id": "seed-32-courage",
+                "word": "courage",
+                "phonetic": "/ˈkʌrɪdʒ/",
+                "meaning": "勇气；胆量",
+                "pos": "n.",
+                "example": "It takes courage to admit your mistakes.",
+                "translation": "承认自己的错误需要很大的勇气。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MEANING_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b2-t1-seed-31-connect",
+              "wordId": "seed-31-connect",
+              "word": {
+                "id": "seed-31-connect",
+                "word": "connect",
+                "phonetic": "/kəˈnekt/",
+                "meaning": "连接；联结",
+                "pos": "v.",
+                "example": "The new bridge connects the two islands.",
+                "translation": "这座新桥把两座岛屿连接了起来。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "AUDIO_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b2-t2-seed-30-confident",
+              "wordId": "seed-30-confident",
+              "word": {
+                "id": "seed-30-confident",
+                "word": "confident",
+                "phonetic": "/ˈkɒnfɪdənt/",
+                "meaning": "自信的；确信的",
+                "pos": "adj.",
+                "example": "Be confident when you speak in public.",
+                "translation": "在公开演讲时要保持自信。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MATCHING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b2-t3-seed-33-curious",
+              "wordId": "seed-33-curious",
+              "word": {
+                "id": "seed-33-curious",
+                "word": "curious",
+                "phonetic": "/ˈkjʊəriəs/",
+                "meaning": "好奇的；求知欲强的",
+                "pos": "adj.",
+                "example": "Children are always curious about nature.",
+                "translation": "孩子们对大自然总是充满好奇。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SENTENCE_FILL",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b2-t4-seed-29-compare",
+              "wordId": "seed-29-compare",
+              "word": {
+                "id": "seed-29-compare",
+                "word": "compare",
+                "phonetic": "/kəmˈpeə(r)/",
+                "meaning": "比较；对比",
+                "pos": "v.",
+                "example": "Do not compare yourself with others.",
+                "translation": "不要总是拿自己和他人比较。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SPELLING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            }
+          ]
+        },
+        {
+          "batchIndex": 3,
+          "wordIds": [
+            "seed-34-decide",
+            "seed-35-delicious",
+            "seed-36-depend",
+            "seed-37-describe",
+            "seed-38-destroy"
+          ],
+          "words": [
+            {
+              "id": "seed-34-decide",
+              "word": "decide",
+              "phonetic": "/dɪˈsaɪd/",
+              "meaning": "决定；决断",
+              "pos": "v.",
+              "example": "They must decide where to go this weekend.",
+              "translation": "他们必须决定这周末去哪里。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-35-delicious",
+              "word": "delicious",
+              "phonetic": "/dɪˈlɪʃəs/",
+              "meaning": "美味的；可口的",
+              "pos": "adj.",
+              "example": "The mother cooked a delicious dinner.",
+              "translation": "妈妈做了一顿美味的晚餐。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-36-depend",
+              "word": "depend",
+              "phonetic": "/dɪˈpend/",
+              "meaning": "依靠；取决于",
+              "pos": "v.",
+              "example": "Success depends on your own efforts.",
+              "translation": "成功取决于你自己的努力。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-37-describe",
+              "word": "describe",
+              "phonetic": "/dɪˈskraɪb/",
+              "meaning": "描写；描述",
+              "pos": "v.",
+              "example": "Can you describe the lost backpack?",
+              "translation": "你能描述一下丢失的背包吗？",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-38-destroy",
+              "word": "destroy",
+              "phonetic": "/dɪˈstrɔɪ/",
+              "meaning": "破坏；摧毁",
+              "pos": "v.",
+              "example": "The storm destroyed several old trees.",
+              "translation": "暴风雨摧毁了好几棵老树。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            }
+          ],
+          "testTasks": [
+            {
+              "taskId": "2026-11-09-b3-t0-seed-34-decide",
+              "wordId": "seed-34-decide",
+              "word": {
+                "id": "seed-34-decide",
+                "word": "decide",
+                "phonetic": "/dɪˈsaɪd/",
+                "meaning": "决定；决断",
+                "pos": "v.",
+                "example": "They must decide where to go this weekend.",
+                "translation": "他们必须决定这周末去哪里。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MEANING_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b3-t1-seed-38-destroy",
+              "wordId": "seed-38-destroy",
+              "word": {
+                "id": "seed-38-destroy",
+                "word": "destroy",
+                "phonetic": "/dɪˈstrɔɪ/",
+                "meaning": "破坏；摧毁",
+                "pos": "v.",
+                "example": "The storm destroyed several old trees.",
+                "translation": "暴风雨摧毁了好几棵老树。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "AUDIO_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b3-t2-seed-37-describe",
+              "wordId": "seed-37-describe",
+              "word": {
+                "id": "seed-37-describe",
+                "word": "describe",
+                "phonetic": "/dɪˈskraɪb/",
+                "meaning": "描写；描述",
+                "pos": "v.",
+                "example": "Can you describe the lost backpack?",
+                "translation": "你能描述一下丢失的背包吗？",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MATCHING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b3-t3-seed-35-delicious",
+              "wordId": "seed-35-delicious",
+              "word": {
+                "id": "seed-35-delicious",
+                "word": "delicious",
+                "phonetic": "/dɪˈlɪʃəs/",
+                "meaning": "美味的；可口的",
+                "pos": "adj.",
+                "example": "The mother cooked a delicious dinner.",
+                "translation": "妈妈做了一顿美味的晚餐。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SENTENCE_FILL",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b3-t4-seed-36-depend",
+              "wordId": "seed-36-depend",
+              "word": {
+                "id": "seed-36-depend",
+                "word": "depend",
+                "phonetic": "/dɪˈpend/",
+                "meaning": "依靠；取决于",
+                "pos": "v.",
+                "example": "Success depends on your own efforts.",
+                "translation": "成功取决于你自己的努力。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SPELLING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            }
+          ]
+        },
+        {
+          "batchIndex": 4,
+          "wordIds": [
+            "seed-39-develop",
+            "seed-40-difficult",
+            "seed-41-direction",
+            "seed-42-discover",
+            "seed-43-distance"
+          ],
+          "words": [
+            {
+              "id": "seed-39-develop",
+              "word": "develop",
+              "phonetic": "/dɪˈveləp/",
+              "meaning": "发展；养成",
+              "pos": "v.",
+              "example": "Try to develop a good habit of reading.",
+              "translation": "努力养成良好的阅读习惯。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-40-difficult",
+              "word": "difficult",
+              "phonetic": "/ˈdɪfɪkəlt/",
+              "meaning": "困难的；难懂的",
+              "pos": "adj.",
+              "example": "This math problem is quite difficult.",
+              "translation": "这道数学题相当难。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": "/words/difficult.png"
+            },
+            {
+              "id": "seed-41-direction",
+              "word": "direction",
+              "phonetic": "/dəˈrekʃn/",
+              "meaning": "方向；指导",
+              "pos": "n.",
+              "example": "Follow the directions on the medicine box.",
+              "translation": "按照药盒上的指导说明服药。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-42-discover",
+              "word": "discover",
+              "phonetic": "/dɪˈskʌvə(r)/",
+              "meaning": "发现；发掘",
+              "pos": "v.",
+              "example": "Scientists discovered water on Mars.",
+              "translation": "科学家在火星上发现了水。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-43-distance",
+              "word": "distance",
+              "phonetic": "/ˈdɪstəns/",
+              "meaning": "距离；间距",
+              "pos": "n.",
+              "example": "The school is a short distance from here.",
+              "translation": "学校离这里距离很短。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            }
+          ],
+          "testTasks": [
+            {
+              "taskId": "2026-11-09-b4-t0-seed-42-discover",
+              "wordId": "seed-42-discover",
+              "word": {
+                "id": "seed-42-discover",
+                "word": "discover",
+                "phonetic": "/dɪˈskʌvə(r)/",
+                "meaning": "发现；发掘",
+                "pos": "v.",
+                "example": "Scientists discovered water on Mars.",
+                "translation": "科学家在火星上发现了水。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MEANING_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b4-t1-seed-39-develop",
+              "wordId": "seed-39-develop",
+              "word": {
+                "id": "seed-39-develop",
+                "word": "develop",
+                "phonetic": "/dɪˈveləp/",
+                "meaning": "发展；养成",
+                "pos": "v.",
+                "example": "Try to develop a good habit of reading.",
+                "translation": "努力养成良好的阅读习惯。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "AUDIO_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b4-t2-seed-41-direction",
+              "wordId": "seed-41-direction",
+              "word": {
+                "id": "seed-41-direction",
+                "word": "direction",
+                "phonetic": "/dəˈrekʃn/",
+                "meaning": "方向；指导",
+                "pos": "n.",
+                "example": "Follow the directions on the medicine box.",
+                "translation": "按照药盒上的指导说明服药。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MATCHING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b4-t3-seed-43-distance",
+              "wordId": "seed-43-distance",
+              "word": {
+                "id": "seed-43-distance",
+                "word": "distance",
+                "phonetic": "/ˈdɪstəns/",
+                "meaning": "距离；间距",
+                "pos": "n.",
+                "example": "The school is a short distance from here.",
+                "translation": "学校离这里距离很短。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SENTENCE_FILL",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b4-t4-seed-40-difficult",
+              "wordId": "seed-40-difficult",
+              "word": {
+                "id": "seed-40-difficult",
+                "word": "difficult",
+                "phonetic": "/ˈdɪfɪkəlt/",
+                "meaning": "困难的；难懂的",
+                "pos": "adj.",
+                "example": "This math problem is quite difficult.",
+                "translation": "这道数学题相当难。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": "/words/difficult.png"
+              },
+              "taskType": "SPELLING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            }
+          ]
+        },
+        {
+          "batchIndex": 5,
+          "wordIds": [
+            "seed-44-education",
+            "seed-45-effort",
+            "seed-46-encourage",
+            "seed-47-energy"
+          ],
+          "words": [
+            {
+              "id": "seed-44-education",
+              "word": "education",
+              "phonetic": "/ˌedʒuˈkeɪʃn/",
+              "meaning": "教育；培养",
+              "pos": "n.",
+              "example": "Education can open many doors in life.",
+              "translation": "教育能在人生中打开许多机遇之门。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-45-effort",
+              "word": "effort",
+              "phonetic": "/ˈefət/",
+              "meaning": "努力；艰难的尝试",
+              "pos": "n.",
+              "example": "He put a lot of effort into this project.",
+              "translation": "他为这个项目倾注了大量的努力。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-46-encourage",
+              "word": "encourage",
+              "phonetic": "/ɪnˈkʌrɪdʒ/",
+              "meaning": "鼓励；激励",
+              "pos": "v.",
+              "example": "Teachers always encourage students to ask questions.",
+              "translation": "老师总是鼓励学生多提问。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            },
+            {
+              "id": "seed-47-energy",
+              "word": "energy",
+              "phonetic": "/ˈenədʒi/",
+              "meaning": "精力；能量",
+              "pos": "n.",
+              "example": "Young students are full of energy.",
+              "translation": "年轻的学生们充满了活力与能量。",
+              "createdAt": "2026-11-08T11:19:52.883Z",
+              "image": null
+            }
+          ],
+          "testTasks": [
+            {
+              "taskId": "2026-11-09-b5-t0-seed-44-education",
+              "wordId": "seed-44-education",
+              "word": {
+                "id": "seed-44-education",
+                "word": "education",
+                "phonetic": "/ˌedʒuˈkeɪʃn/",
+                "meaning": "教育；培养",
+                "pos": "n.",
+                "example": "Education can open many doors in life.",
+                "translation": "教育能在人生中打开许多机遇之门。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MEANING_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b5-t1-seed-45-effort",
+              "wordId": "seed-45-effort",
+              "word": {
+                "id": "seed-45-effort",
+                "word": "effort",
+                "phonetic": "/ˈefət/",
+                "meaning": "努力；艰难的尝试",
+                "pos": "n.",
+                "example": "He put a lot of effort into this project.",
+                "translation": "他为这个项目倾注了大量的努力。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "AUDIO_CHOICE",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b5-t2-seed-46-encourage",
+              "wordId": "seed-46-encourage",
+              "word": {
+                "id": "seed-46-encourage",
+                "word": "encourage",
+                "phonetic": "/ɪnˈkʌrɪdʒ/",
+                "meaning": "鼓励；激励",
+                "pos": "v.",
+                "example": "Teachers always encourage students to ask questions.",
+                "translation": "老师总是鼓励学生多提问。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "MATCHING",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            },
+            {
+              "taskId": "2026-11-09-b5-t3-seed-47-energy",
+              "wordId": "seed-47-energy",
+              "word": {
+                "id": "seed-47-energy",
+                "word": "energy",
+                "phonetic": "/ˈenədʒi/",
+                "meaning": "精力；能量",
+                "pos": "n.",
+                "example": "Young students are full of energy.",
+                "translation": "年轻的学生们充满了活力与能量。",
+                "createdAt": "2026-11-08T11:19:52.883Z",
+                "image": null
+              },
+              "taskType": "SENTENCE_FILL",
+              "isAnswered": false,
+              "isFirstTryCorrect": null,
+              "scoreAwarded": false
+            }
+          ]
+        }
+      ],
+      "createdAt": "2026-11-09T06:51:43.422Z",
+      "updatedAt": "2026-11-09T06:51:43.449Z"
     }
   },
   "users": {

@@ -140,3 +140,29 @@ describe('5. 词库导入与数据清洗 (File Decoder Tests)', () => {
     expect(rows.length).toBe(2);
   });
 });
+
+describe('6. 单词配图精准预解析与零闪烁零上跳 (Image Resolver Tests)', () => {
+  it('有图单词返回对应静态文件路径，无图单词返回 null (杜绝 404 异步探测塌陷)', async () => {
+    const { resolveWordImage } = await import('../lib/utils/imageResolver');
+    // public/words/asked.png 存在
+    expect(resolveWordImage('asked')).toBe('/words/asked.png');
+    // 大小写不敏感
+    expect(resolveWordImage('ASKED')).toBe('/words/asked.png');
+    // 不存在的单词返回 null，前端直接不渲染图片容器，零占位零跳动
+    expect(resolveWordImage('non_existent_xyz_word_12345')).toBeNull();
+    // 显式指定自定义图片优先使用
+    expect(resolveWordImage('custom', 'https://example.com/custom.png')).toBe('https://example.com/custom.png');
+  });
+
+  it('客户端词图字典能够同步检索并判定有无配图', async () => {
+    const { setClientWordImages, getClientWordImage } = await import('../lib/images/clientImageCache');
+    setClientWordImages({
+      camping: '/words/camping.png',
+      'look after': '/words/look_after.png',
+    });
+    expect(getClientWordImage('camping')).toBe('/words/camping.png');
+    expect(getClientWordImage('CAMPING')).toBe('/words/camping.png');
+    expect(getClientWordImage('look_after')).toBe('/words/look_after.png');
+    expect(getClientWordImage('unknown_word')).toBeNull();
+  });
+});

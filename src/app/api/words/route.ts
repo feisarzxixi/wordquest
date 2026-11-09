@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { LocalDB } from '../../../lib/db';
 import { MASTERY_INTERVAL_THRESHOLD } from '../../../config/learningRules';
 import { getStudentIdFromRequest } from '../../../lib/auth/serverAuth';
+import { resolveWordImage } from '../../../lib/utils/imageResolver';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +44,7 @@ export async function GET(req: Request) {
     const isMastered = !!rec && rec.reviewInterval >= MASTERY_INTERVAL_THRESHOLD && rec.lastResult === true;
     return {
       ...w,
+      image: resolveWordImage(w.word, w.image),
       isMastered,
       reviewInterval: rec ? rec.reviewInterval : 0,
       nextReviewDate: rec ? rec.nextReviewDate : null,

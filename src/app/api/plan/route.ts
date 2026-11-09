@@ -4,8 +4,28 @@ import { generateDailyPlan, generateNextEndlessBatch } from '../../../lib/algori
 import { calculateNextReview, formatDate, checkMasteryStatus } from '../../../lib/algorithms/srsScheduler';
 import { DIFFICULTY_CONFIGS } from '../../../config/gamification';
 import { getStudentIdFromRequest } from '../../../lib/auth/serverAuth';
+import { resolveWordImage } from '../../../lib/utils/imageResolver';
 
 export const dynamic = 'force-dynamic';
+
+function enrichPlanImages(targetPlan: DailyPlanEntity): DailyPlanEntity {
+  if (!targetPlan || !targetPlan.batches) return targetPlan;
+  for (const batch of targetPlan.batches) {
+    if (batch.words) {
+      for (const w of batch.words) {
+        w.image = resolveWordImage(w.word, w.image);
+      }
+    }
+    if (batch.testTasks) {
+      for (const t of batch.testTasks) {
+        if (t.word) {
+          t.word.image = resolveWordImage(t.word.word, t.word.image);
+        }
+      }
+    }
+  }
+  return targetPlan;
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -37,6 +57,19 @@ export async function GET(req: Request) {
       today
     );
 
+    if (endlessBatch.words) {
+      for (const w of endlessBatch.words) {
+        w.image = resolveWordImage(w.word, w.image);
+      }
+    }
+    if (endlessBatch.testTasks) {
+      for (const t of endlessBatch.testTasks) {
+        if (t.word) {
+          t.word.image = resolveWordImage(t.word.word, t.word.image);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -49,6 +82,7 @@ export async function GET(req: Request) {
   // 2. 常规今日计划请求
   let plan = LocalDB.getDailyPlan(today, studentId);
   if (plan) {
+    enrichPlanImages(plan);
     return NextResponse.json({
       success: true,
       data: plan,
@@ -86,6 +120,7 @@ export async function GET(req: Request) {
     updatedAt: new Date().toISOString(),
   };
 
+  enrichPlanImages(newPlan);
   LocalDB.saveDailyPlan(newPlan, studentId);
   return NextResponse.json({
     success: true,
