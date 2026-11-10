@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   try {
     const studentId = getStudentIdFromRequest(req);
+    await LocalDB.pullStudentFromCloud(studentId);
     const data = LocalDB.getStudentData(studentId);
     return NextResponse.json({ success: true, data });
   } catch (err: any) {

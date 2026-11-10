@@ -12,6 +12,7 @@ import { DifficultyTier, DIFFICULTY_CONFIGS } from '../../config/gamification';
 import { BaseWord, LearningBatch } from '../algorithms/planEngine';
 import { MASTERY_INTERVAL_THRESHOLD } from '../../config/learningRules';
 import { formatDate } from '../algorithms/srsScheduler';
+import { CloudStorage } from './cloudStorage';
 
 export interface UserSettings {
   id: string;
@@ -919,6 +920,76 @@ export class LocalDB {
     }
 
     this.persist();
+    this.pushStudentToCloud(studentId).catch(() => {});
     return { student, restoredCount };
+  }
+
+  // --- Cloud Database Integration (Upstash Redis) ---
+  public static async pullStudentFromCloud(studentId: string = 'student-default'): Promise<StudentData> {
+    const student = this.ensureStudent(studentId);
+    if (!CloudStorage.isConfigured()) return student;
+
+    try {
+      const cloudData = await CloudStorage.getStudent(studentId);
+      if (cloudData) {
+        if (cloudData.settings) {
+          student.settings = { ...student.settings, ...cloudData.settings };
+        }
+        if (cloudData.records) {
+          student.records = { ...student.records, ...cloudData.records };
+        }
+        if (cloudData.dailyPlans) {
+          student.dailyPlans = { ...student.dailyPlans, ...cloudData.dailyPlans };
+        }
+        if (cloudData.dailyStudyTime) {
+          student.dailyStudyTime = { ...(student.dailyStudyTime || {}), ...cloudData.dailyStudyTime };
+        }
+        if (cloudData.dailyLearnedWords) {
+          student.dailyLearnedWords = { ...(student.dailyLearnedWords || {}), ...cloudData.dailyLearnedWords };
+        }
+        this.persist();
+      } else {
+        await CloudStorage.saveStudent(studentId, student);
+      }
+    } catch (e) {
+      console.warn(`[LocalDB] pullStudentFromCloud(${studentId}) failed:`, e);
+    }
+
+    return student;
+  }
+
+  public static async pushStudentToCloud(studentId: string = 'student-default'): Promise<void> {
+    if (!CloudStorage.isConfigured()) return;
+    try {
+      const student = this.ensureStudent(studentId);
+      await CloudStorage.saveStudent(studentId, student);
+    } catch (e) {
+      console.warn(`[LocalDB] pushStudentToCloud(${studentId}) failed:`, e);
+    }
+  }
+
+  public static async pullUsersFromCloud(): Promise<void> {
+    if (!CloudStorage.isConfigured()) return;
+    try {
+      const cloudUsers = await CloudStorage.getUsers();
+      if (cloudUsers && Object.keys(cloudUsers).length > 0) {
+        const db = this.get();
+        db.users = { ...db.users, ...cloudUsers };
+        this.persist();
+      } else {
+        await CloudStorage.saveUsers(this.get().users);
+      }
+    } catch (e) {
+      console.warn('[LocalDB] pullUsersFromCloud failed:', e);
+    }
+  }
+
+  public static async pushUsersToCloud(): Promise<void> {
+    if (!CloudStorage.isConfigured()) return;
+    try {
+      await CloudStorage.saveUsers(this.get().users);
+    } catch (e) {
+      console.warn('[LocalDB] pushUsersToCloud failed:', e);
+    }
   }
 }

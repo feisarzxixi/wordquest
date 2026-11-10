@@ -33,6 +33,8 @@ export async function GET(req: Request) {
   const today = formatDate(new Date());
   const studentId = getStudentIdFromRequest(req);
 
+  await LocalDB.pullStudentFromCloud(studentId);
+
   const settings = LocalDB.getSettings(studentId);
   const allWords = LocalDB.getAllWords();
   const allRecords = LocalDB.getAllRecords(studentId);
@@ -122,6 +124,7 @@ export async function GET(req: Request) {
 
   enrichPlanImages(newPlan);
   LocalDB.saveDailyPlan(newPlan, studentId);
+  await LocalDB.pushStudentToCloud(studentId);
   return NextResponse.json({
     success: true,
     data: newPlan,
@@ -136,11 +139,14 @@ export async function POST(req: Request) {
     const planDate = date || formatDate(new Date());
     const studentId = getStudentIdFromRequest(req) || body.studentId || 'student-default';
 
+    await LocalDB.pullStudentFromCloud(studentId);
+
     const plan = LocalDB.getDailyPlan(planDate, studentId);
     const settings = LocalDB.getSettings(studentId);
 
     if (action === 'restore_plan' && body.plan) {
       LocalDB.saveDailyPlan(body.plan, studentId);
+      await LocalDB.pushStudentToCloud(studentId);
       return NextResponse.json({ success: true, data: body.plan });
     }
 
@@ -148,6 +154,7 @@ export async function POST(req: Request) {
       plan.currentBatchIndex = batchIndex ?? plan.currentBatchIndex;
       plan.currentTaskIndex = taskIndex ?? plan.currentTaskIndex;
       LocalDB.saveDailyPlan(plan, studentId);
+      await LocalDB.pushStudentToCloud(studentId);
       return NextResponse.json({ success: true, data: plan });
     }
 
@@ -162,6 +169,7 @@ export async function POST(req: Request) {
         },
         studentId
       );
+      await LocalDB.pushStudentToCloud(studentId);
       return NextResponse.json({ success: true });
     }
 
@@ -209,6 +217,7 @@ export async function POST(req: Request) {
 
       // 记录当日学习单词活跃数
       LocalDB.recordDailyLearnedWord(wordId, planDate, studentId);
+      await LocalDB.pushStudentToCloud(studentId);
 
       return NextResponse.json({
         success: true,
@@ -244,6 +253,7 @@ export async function POST(req: Request) {
 
       plan.isCompleted = true;
       LocalDB.saveDailyPlan(plan, studentId);
+      await LocalDB.pushStudentToCloud(studentId);
 
       return NextResponse.json({
         success: true,

@@ -8,9 +8,11 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const studentId = body.studentId || getStudentIdFromRequest(req);
+    await LocalDB.pullStudentFromCloud(studentId);
     const minutes = body.minutes || (body.seconds ? body.seconds / 60 : 0.5);
 
     const updatedToday = LocalDB.recordStudyTime(minutes, undefined, studentId);
+    await LocalDB.pushStudentToCloud(studentId);
     return NextResponse.json({ success: true, todayMinutes: updatedToday });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

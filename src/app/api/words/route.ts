@@ -12,6 +12,7 @@ export async function GET(req: Request) {
   const query = (searchParams.get('q') || '').trim().toLowerCase();
   const includeUntested = searchParams.get('untested') === 'true';
   const studentId = getStudentIdFromRequest(req);
+  await LocalDB.pullStudentFromCloud(studentId);
 
   const allWords = LocalDB.getAllWords();
   const recordsMap = new Map(LocalDB.getAllRecords(studentId).map((r) => [r.wordId, r]));

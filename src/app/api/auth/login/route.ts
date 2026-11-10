@@ -12,6 +12,8 @@ export async function POST(req: Request) {
       );
     }
 
+    await LocalDB.pullUsersFromCloud();
+
     const user = LocalDB.getUserByUsername(username);
     if (!user) {
       return NextResponse.json(
