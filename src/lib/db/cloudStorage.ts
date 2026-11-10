@@ -14,8 +14,17 @@ export class CloudStorage {
     if (!this.isConfigured()) return null;
     if (!this.client) {
       try {
-        const url = process.env.UPSTASH_REDIS_REST_URL!.trim();
-        const token = process.env.UPSTASH_REDIS_REST_TOKEN!.trim();
+        let url = process.env.UPSTASH_REDIS_REST_URL!.trim();
+        let token = process.env.UPSTASH_REDIS_REST_TOKEN!.trim();
+
+        // 自动清洗可能被误贴的双引号、单引号或前缀
+        url = url.replace(/^UPSTASH_REDIS_REST_URL\s*=\s*/i, '').replace(/^["']|["']$/g, '').trim();
+        token = token
+          .replace(/^UPSTASH_REDIS_REST_TOKEN\s*=\s*/i, '')
+          .replace(/^["']|["']$/g, '')
+          .replace(/^Bearer\s+/i, '')
+          .trim();
+
         this.client = new Redis({ url, token });
       } catch (err) {
         console.warn('[CloudStorage] Initialize Upstash client failed:', err);
