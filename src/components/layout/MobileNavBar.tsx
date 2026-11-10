@@ -17,8 +17,8 @@ const mobileNavItems = [
 export const MobileNavBar: React.FC = () => {
   const pathname = usePathname();
 
-  // 处于登录页面或未登录状态时，严禁展示业务底栏，彻底防止绕过鉴权
-  if (pathname === '/login') {
+  // 处于登录页面或实验室时隐藏底栏，防止遮挡或越权
+  if (pathname === '/login' || pathname?.startsWith('/lab')) {
     return null;
   }
 

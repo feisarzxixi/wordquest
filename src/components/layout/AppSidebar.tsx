@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, BookOpen, Compass, BarChart3, Settings, Users, ChevronRight, Shield, LogIn } from 'lucide-react';
+import { Home, BookOpen, Compass, BarChart3, Settings, Users, ChevronRight, Shield, LogIn, FlaskConical } from 'lucide-react';
 import { ClientSession, UserSession } from '../../lib/auth/clientSession';
 import { ProfileSwitcherModal } from './ProfileSwitcherModal';
 
@@ -105,6 +105,23 @@ export const AppSidebar: React.FC = () => {
         {/* 底部学生信息卡与快捷切号入口 */}
         {!isLoginPage && (
           <div className="flex flex-col gap-2">
+            <Link
+              href="/lab"
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                pathname === '/lab'
+                  ? 'bg-amber-100/80 text-amber-900 border-amber-300 shadow-sm'
+                  : 'bg-amber-50/60 text-amber-800 border-amber-200/80 hover:bg-amber-100/60'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FlaskConical size={16} className="text-amber-600" />
+                <span>2.0 题型实验室</span>
+              </div>
+              <span className="text-[10px] uppercase font-black px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-900">
+                Lab
+              </span>
+            </Link>
+
             <div
               onClick={handleUserCardClick}
               className="p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 border border-slate-100 hover:border-indigo-100 flex items-center justify-between cursor-pointer transition-all group active:scale-98"

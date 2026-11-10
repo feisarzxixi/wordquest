@@ -10,8 +10,8 @@ export const AuthRouteGuard: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // 登录页直接允许放行
-    if (pathname === '/login') {
+    // 登录页和实验室测试页直接放行
+    if (pathname === '/login' || pathname?.startsWith('/lab')) {
       setIsAuthorized(true);
       return;
     }
@@ -27,7 +27,7 @@ export const AuthRouteGuard: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const handleUserChange = (e: any) => {
       const u = e.detail;
-      if (!u && pathname !== '/login') {
+      if (!u && pathname !== '/login' && !pathname?.startsWith('/lab')) {
         setIsAuthorized(false);
         router.replace('/login');
       } else {
@@ -42,7 +42,7 @@ export const AuthRouteGuard: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [pathname, router]);
 
   // 如果是在受保护页面且尚未判定完毕或未授权，展示极简安全加载屏，严禁界面穿透
-  if (pathname !== '/login' && isAuthorized !== true) {
+  if (pathname !== '/login' && !pathname?.startsWith('/lab') && isAuthorized !== true) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] p-8 text-center select-none">
         <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center animate-pulse mb-4">
