@@ -763,4 +763,162 @@ export class LocalDB {
   public static exportAll(): any {
     return this.get();
   }
+
+  // --- Data Synchronization & Recovery (Dual-Layer Resilience) ---
+  public static getStudentData(studentId: string = 'student-default'): StudentData {
+    return this.ensureStudent(studentId);
+  }
+
+  public static syncStudentData(
+    studentId: string,
+    clientData?: Partial<StudentData>,
+    backupPlans?: DailyPlanEntity[]
+  ): { student: StudentData; restoredCount: number } {
+    const student = this.ensureStudent(studentId);
+    let restoredCount = 0;
+
+    // 1. 如果客户端传入了全量 studentData，优先进行智能合并
+    if (clientData) {
+      if (clientData.settings) {
+        student.settings.streakDays = Math.max(student.settings.streakDays || 0, clientData.settings.streakDays || 0);
+        student.settings.totalPoints = Math.max(student.settings.totalPoints || 0, clientData.settings.totalPoints || 0);
+        if (clientData.settings.lastCompletedDate) {
+          student.settings.lastCompletedDate = clientData.settings.lastCompletedDate;
+        }
+      }
+      if (clientData.records) {
+        for (const [wId, rec] of Object.entries(clientData.records)) {
+          if (!student.records[wId] || new Date(rec.updatedAt || 0) >= new Date(student.records[wId].updatedAt || 0)) {
+            if (!student.records[wId]) restoredCount++;
+            student.records[wId] = rec;
+          }
+        }
+      }
+      if (clientData.dailyPlans) {
+        for (const [date, plan] of Object.entries(clientData.dailyPlans)) {
+          if (!student.dailyPlans[date] || (plan.updatedAt && plan.updatedAt >= (student.dailyPlans[date].updatedAt || ''))) {
+            student.dailyPlans[date] = plan;
+          }
+        }
+      }
+      if (clientData.dailyStudyTime) {
+        student.dailyStudyTime = student.dailyStudyTime || {};
+        for (const [d, m] of Object.entries(clientData.dailyStudyTime)) {
+          student.dailyStudyTime[d] = Math.max(student.dailyStudyTime[d] || 0, m);
+        }
+      }
+      if (clientData.dailyLearnedWords) {
+        student.dailyLearnedWords = student.dailyLearnedWords || {};
+        for (const [d, c] of Object.entries(clientData.dailyLearnedWords)) {
+          student.dailyLearnedWords[d] = Math.max(student.dailyLearnedWords[d] || 0, c);
+        }
+      }
+    }
+
+    // 2. 如果客户端扫描到了历史计划快照（例如昨天的备份），深度解析并恢复
+    if (backupPlans && Array.isArray(backupPlans)) {
+      for (const plan of backupPlans) {
+        if (!plan || !plan.date) continue;
+
+        // 保存/更新计划记录
+        const existingPlan = student.dailyPlans[plan.date];
+        if (!existingPlan || (plan.updatedAt && plan.updatedAt >= (existingPlan.updatedAt || ''))) {
+          student.dailyPlans[plan.date] = plan;
+        }
+
+        const wordsOnPlan = new Set<string>();
+
+        // 遍历所有批次和题型，重构词汇熟练度与正误记录
+        if (plan.batches && Array.isArray(plan.batches)) {
+          for (const batch of plan.batches) {
+            if (batch.testTasks && Array.isArray(batch.testTasks)) {
+              for (const task of batch.testTasks) {
+                if (task.isAnswered && task.wordId) {
+                  wordsOnPlan.add(task.wordId);
+                  const isCorrect = task.isFirstTryCorrect === true;
+                  const existingRec = student.records[task.wordId];
+
+                  if (!existingRec) {
+                    restoredCount++;
+                    const now = plan.updatedAt || `${plan.date}T12:00:00.000Z`;
+                    student.records[task.wordId] = {
+                      wordId: task.wordId,
+                      familiarity: 1,
+                      reviewInterval: isCorrect ? 3 : 1,
+                      nextReviewDate: formatDate(new Date(Date.now() + (isCorrect ? 3 : 1) * 86400000)),
+                      totalAttempts: 1,
+                      correctCount: isCorrect ? 1 : 0,
+                      lastResult: isCorrect,
+                      firstTestedAt: plan.createdAt || now,
+                      updatedAt: now,
+                    };
+                  } else if (task.isFirstTryCorrect !== null && existingRec.lastResult === null) {
+                    existingRec.lastResult = isCorrect;
+                    existingRec.totalAttempts = Math.max(existingRec.totalAttempts, 1);
+                    if (isCorrect) existingRec.correctCount = Math.max(existingRec.correctCount, 1);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // 恢复当天学习词汇量
+        if (wordsOnPlan.size > 0) {
+          student.dailyLearnedWords = student.dailyLearnedWords || {};
+          student.dailyLearnedWords[plan.date] = Math.max(
+            student.dailyLearnedWords[plan.date] || 0,
+            wordsOnPlan.size
+          );
+        }
+
+        // 恢复当天学习时长保底（如果没有时长，按每个任务或最低 10 分钟保底）
+        student.dailyStudyTime = student.dailyStudyTime || {};
+        if (!student.dailyStudyTime[plan.date] || student.dailyStudyTime[plan.date] === 0) {
+          const estimatedMinutes = Math.max(10, Math.round(wordsOnPlan.size * 1.5));
+          student.dailyStudyTime[plan.date] = estimatedMinutes;
+        }
+
+        // 恢复连续打卡天数与积分
+        if (plan.isCompleted) {
+          student.settings.lastCompletedDate = plan.date;
+        }
+      }
+    }
+
+    // 3. 智能重算累计积分与打卡天数
+    let totalFirstTryCorrect = 0;
+    let completedPlansCount = 0;
+    for (const plan of Object.values(student.dailyPlans)) {
+      if (plan.isCompleted) completedPlansCount++;
+      plan.batches?.forEach((b) => {
+        b.testTasks?.forEach((t) => {
+          if (t.isAnswered && t.isFirstTryCorrect) totalFirstTryCorrect++;
+        });
+      });
+    }
+    const calculatedPoints = totalFirstTryCorrect + (completedPlansCount * 15);
+    student.settings.totalPoints = Math.max(student.settings.totalPoints || 0, calculatedPoints);
+
+    // 计算活跃打卡连续天数
+    const activeDates = new Set<string>();
+    if (student.dailyLearnedWords) {
+      Object.keys(student.dailyLearnedWords).forEach((d) => {
+        if ((student.dailyLearnedWords![d] || 0) > 0) activeDates.add(d);
+      });
+    }
+    if (student.dailyStudyTime) {
+      Object.keys(student.dailyStudyTime).forEach((d) => {
+        if ((student.dailyStudyTime![d] || 0) > 0) activeDates.add(d);
+      });
+    }
+    Object.keys(student.dailyPlans).forEach((d) => activeDates.add(d));
+
+    if (activeDates.size > 0) {
+      student.settings.streakDays = Math.max(student.settings.streakDays || 0, activeDates.size);
+    }
+
+    this.persist();
+    return { student, restoredCount };
+  }
 }

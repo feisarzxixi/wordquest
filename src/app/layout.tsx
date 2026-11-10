@@ -4,6 +4,7 @@ import './globals.css';
 import { AppSidebar } from '../components/layout/AppSidebar';
 import { MobileNavBar } from '../components/layout/MobileNavBar';
 import { AuthRouteGuard } from '../components/auth/AuthRouteGuard';
+import { DataSyncManager } from '../components/sync/DataSyncManager';
 
 export const metadata: Metadata = {
   title: 'WordQuest - 英语单词探索与学习系统',
@@ -33,6 +34,9 @@ export default function RootLayout({
         <main className="flex-1 min-h-screen pb-24 md:pb-8 flex flex-col overflow-y-auto">
           <AuthRouteGuard>{children}</AuthRouteGuard>
         </main>
+
+        {/* 客户端数据持久化自愈管理器（解决 Render 休眠与部署重置） */}
+        <DataSyncManager />
 
         {/* 手机端：自适应安全底部导航栏（登录页自动隐藏） */}
         <MobileNavBar />

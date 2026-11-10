@@ -24,6 +24,14 @@ export default function HomePage() {
       return;
     }
     fetchData();
+
+    const handleSynced = () => {
+      fetchData();
+    };
+    window.addEventListener('wq_data_synced', handleSynced);
+    return () => {
+      window.removeEventListener('wq_data_synced', handleSynced);
+    };
   }, []);
 
   const fetchData = async () => {

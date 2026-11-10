@@ -17,6 +17,16 @@ export default function WordsPage() {
     fetchWords();
   }, [filter, searchQuery]);
 
+  useEffect(() => {
+    const handleSynced = () => {
+      fetchWords();
+    };
+    window.addEventListener('wq_data_synced', handleSynced);
+    return () => {
+      window.removeEventListener('wq_data_synced', handleSynced);
+    };
+  }, []);
+
   const fetchWords = async () => {
     try {
       const params = new URLSearchParams();

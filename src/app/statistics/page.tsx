@@ -22,6 +22,14 @@ export default function StatisticsPage() {
 
   useEffect(() => {
     fetchStats();
+
+    const handleSynced = () => {
+      fetchStats();
+    };
+    window.addEventListener('wq_data_synced', handleSynced);
+    return () => {
+      window.removeEventListener('wq_data_synced', handleSynced);
+    };
   }, []);
 
   const fetchStats = async () => {

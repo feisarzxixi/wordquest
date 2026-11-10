@@ -12,6 +12,7 @@ import {
 import { QuestionFactory } from '../lib/quiz-factory/QuestionFactory';
 import { parseCSV, guessFieldMapping, buildImportPreview } from '../lib/importer/FileDecoder';
 import { RESULT_AUTO_ADVANCE_MS } from '../config/learningRules';
+import { LocalDB } from '../lib/db';
 
 describe('1. 基础配置与艾宾浩斯复习算法 (SRS Tests)', () => {
   it('结果页停留时间配置为 3000ms (3.0 秒)', () => {
@@ -240,3 +241,64 @@ describe('7. 词元合并、语法过滤与 8 词闭环考点测试 (Lemmatizati
     expect(formQuiz.options?.find(o => o.isCorrect)?.text).toBe('improved');
   });
 });
+
+describe('8. 数据自愈与持久化同步 (Dual-Layer Sync Tests)', () => {
+  it('从历史备份快照中自愈恢复学习记录与掌握度', () => {
+    const studentId = 'test-sync-student';
+    LocalDB.resetProgress(studentId);
+
+    const backupPlan = {
+      id: 'plan-2026-11-09',
+      date: '2026-11-09',
+      difficulty: 'regular',
+      targetNewWordCount: 8,
+      totalWordCount: 8,
+      isCompleted: true,
+      bonusAwarded: true,
+      currentBatchIndex: 0,
+      currentTaskIndex: 8,
+      batches: [
+        {
+          batchIndex: 0,
+          wordIds: ['w1', 'w2'],
+          words: [
+            { id: 'w1', word: 'challenge', meaning: '挑战' },
+            { id: 'w2', word: 'enjoy', meaning: '享受' },
+          ],
+          testTasks: [
+            {
+              taskId: 't1',
+              wordId: 'w1',
+              word: { id: 'w1', word: 'challenge', meaning: '挑战' },
+              taskType: 'ENG_TO_CHN_CHOICE',
+              isAnswered: true,
+              isFirstTryCorrect: true,
+              scoreAwarded: true,
+            },
+            {
+              taskId: 't2',
+              wordId: 'w2',
+              word: { id: 'w2', word: 'enjoy', meaning: '享受' },
+              taskType: 'CHN_TO_ENG_CHOICE',
+              isAnswered: true,
+              isFirstTryCorrect: false,
+              scoreAwarded: false,
+            },
+          ],
+        },
+      ],
+      createdAt: '2026-11-09T10:00:00.000Z',
+      updatedAt: '2026-11-09T10:30:00.000Z',
+    };
+
+    const res = LocalDB.syncStudentData(studentId, undefined, [backupPlan]);
+    expect(res.restoredCount).toBe(2);
+    expect(res.student.records['w1']).toBeDefined();
+    expect(res.student.records['w1'].correctCount).toBe(1);
+    expect(res.student.records['w1'].lastResult).toBe(true);
+    expect(res.student.records['w2'].lastResult).toBe(false);
+    expect(res.student.dailyPlans['2026-11-09']).toBeDefined();
+    expect(res.student.settings.streakDays).toBeGreaterThanOrEqual(1);
+  });
+});
+

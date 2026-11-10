@@ -39179,6 +39179,113 @@
       "dailyPlans": {},
       "dailyStudyTime": {},
       "dailyLearnedWords": {}
+    },
+    "test-sync-student": {
+      "settings": {
+        "id": "test-sync-student",
+        "studentName": "学生",
+        "difficulty": "regular",
+        "volume": 1,
+        "speechRate": 0.85,
+        "accent": "uk",
+        "streakDays": 1,
+        "totalPoints": 16,
+        "lastCompletedDate": "2026-11-09"
+      },
+      "records": {
+        "w1": {
+          "wordId": "w1",
+          "familiarity": 1,
+          "reviewInterval": 3,
+          "nextReviewDate": "2026-11-13",
+          "totalAttempts": 1,
+          "correctCount": 1,
+          "lastResult": true,
+          "firstTestedAt": "2026-11-09T10:00:00.000Z",
+          "updatedAt": "2026-11-09T10:30:00.000Z"
+        },
+        "w2": {
+          "wordId": "w2",
+          "familiarity": 1,
+          "reviewInterval": 1,
+          "nextReviewDate": "2026-11-11",
+          "totalAttempts": 1,
+          "correctCount": 0,
+          "lastResult": false,
+          "firstTestedAt": "2026-11-09T10:00:00.000Z",
+          "updatedAt": "2026-11-09T10:30:00.000Z"
+        }
+      },
+      "dailyPlans": {
+        "2026-11-09": {
+          "id": "plan-2026-11-09",
+          "date": "2026-11-09",
+          "difficulty": "regular",
+          "targetNewWordCount": 8,
+          "totalWordCount": 8,
+          "isCompleted": true,
+          "bonusAwarded": true,
+          "currentBatchIndex": 0,
+          "currentTaskIndex": 8,
+          "batches": [
+            {
+              "batchIndex": 0,
+              "wordIds": [
+                "w1",
+                "w2"
+              ],
+              "words": [
+                {
+                  "id": "w1",
+                  "word": "challenge",
+                  "meaning": "挑战"
+                },
+                {
+                  "id": "w2",
+                  "word": "enjoy",
+                  "meaning": "享受"
+                }
+              ],
+              "testTasks": [
+                {
+                  "taskId": "t1",
+                  "wordId": "w1",
+                  "word": {
+                    "id": "w1",
+                    "word": "challenge",
+                    "meaning": "挑战"
+                  },
+                  "taskType": "ENG_TO_CHN_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": true,
+                  "scoreAwarded": true
+                },
+                {
+                  "taskId": "t2",
+                  "wordId": "w2",
+                  "word": {
+                    "id": "w2",
+                    "word": "enjoy",
+                    "meaning": "享受"
+                  },
+                  "taskType": "CHN_TO_ENG_CHOICE",
+                  "isAnswered": true,
+                  "isFirstTryCorrect": false,
+                  "scoreAwarded": false
+                }
+              ]
+            }
+          ],
+          "createdAt": "2026-11-09T10:00:00.000Z",
+          "updatedAt": "2026-11-09T10:30:00.000Z"
+        }
+      },
+      "dailyLearnedWords": {
+        "2026-11-09": 2
+      },
+      "dailyStudyTime": {
+        "2026-11-09": 10
+      }
     }
   }
 }

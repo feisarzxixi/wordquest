@@ -68,6 +68,7 @@ function StudyInner() {
     if (!user || !planData || !planData.date) return;
     try {
       localStorage.setItem(`wq_backup_plan_${user.id}_${planData.date}`, JSON.stringify(planData));
+      window.dispatchEvent(new CustomEvent('wq_sync_needed'));
     } catch (e) {}
   };
 
